@@ -15,9 +15,9 @@ function renderCounters(turboHeroes, heroConstants) {
     const badEl = document.getElementById('counters-bad');
     if (!goodEl || !badEl || !turboHeroes || !heroConstants) return;
 
-    // Filtra heróis com pelo menos 3 partidas no Turbo
+    // Filtra heróis com pelo menos 5 partidas no Turbo (amostra mínima confiável)
     const relevantes = turboHeroes
-        .filter(h => h.games >= 3 && heroConstants[h.hero_id])
+        .filter(h => h.games >= 5 && heroConstants[h.hero_id])
         .map(h => {
             const wr = h.games > 0 ? (h.win / h.games) * 100 : 0;
             return { ...h, winRate: wr };
@@ -37,10 +37,10 @@ function renderCounters(turboHeroes, heroConstants) {
     // Divide ao meio: metade de cima = forte, metade de baixo = fraco
     const metade = Math.ceil(ordenados.length / 2);
     const bons = ordenados.slice(0, metade);
-    const ruins = ordenados.slice(metade).reverse(); // piores primeiro
+    const ruins = ordenados.slice(metade).reverse(); // piores primeiro (menor % no topo)
 
-    // Mostra 10 inicialmente, com botão "Ver mais" se tiver mais
-    const LIMITE_INICIAL = 10;
+    // Mostra 5 inicialmente, com botão "Ver mais" se tiver mais
+    const LIMITE_INICIAL = 5;
 
     goodEl.innerHTML = renderCounterList(bons.slice(0, LIMITE_INICIAL), heroConstants, true);
     if (bons.length > LIMITE_INICIAL) {
