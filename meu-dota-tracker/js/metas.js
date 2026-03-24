@@ -19,14 +19,17 @@
 // CONSTANTES E MULTIPLICADORES TURBO
 // ============================================
 
+// Na Turbo, o gold passivo é DOBRADO e a XP é muito mais alta.
+// O efeito composto (gold passivo + itens acelerando farm) resulta em
+// multiplicadores efetivos bem maiores que o raw 1.5x do gold passivo.
 const TURBO_MULT = {
-    gold_per_min:        1.35,   // GPM mais alto pelo gold passivo
-    xp_per_min:          1.40,   // XPM mais alto
-    kills_per_min:       1.50,   // Mais lutas, mais kills por minuto
-    last_hits_per_min:   1.20,   // Farm levemente mais rápido
-    hero_damage_per_min: 1.30,   // Mais dano por minuto (lutas mais frequentes)
-    hero_healing_per_min:1.20,   // Mais cura por minuto
-    tower_damage:        0.70    // Menos dano em torre (jogo mais curto)
+    gold_per_min:        1.85,   // GPM efetivo ~1.85x (gold passivo 2x + farm acelerado)
+    xp_per_min:          1.80,   // XPM efetivo ~1.8x (XP passiva maior + levels mais rápidos)
+    kills_per_min:       1.60,   // Mais lutas, mais kills por minuto
+    last_hits_per_min:   1.40,   // Farm mais rápido (itens antes = clear mais rápido)
+    hero_damage_per_min: 1.50,   // Mais dano por minuto (lutas mais frequentes + itens)
+    hero_healing_per_min:1.40,   // Mais cura por minuto
+    tower_damage:        0.80    // Menos dano em torre (jogo mais curto mas itens antes)
 };
 
 // Fases do jogo no Turbo (em minutos)
@@ -36,59 +39,88 @@ const FASES_TURBO = {
     late:  { nome: 'Late Game',   min: 12, max: 25, icone: '🏆' }
 };
 
-// GPM esperado por posição no Turbo (usado para estimar NW por fase)
+// GPM esperado por posição no TURBO
+// Gold passivo é DOBRADO na Turbo. Efeito composto: gold passivo 2x + itens antes
+// = farm ainda mais rápido. Valores baseados em dados reais de partidas Turbo.
 const GPM_POR_POSICAO = {
-    1: { early: 550, mid: 850, late: 1000 },  // Hard Carry
-    2: { early: 500, mid: 800, late: 900 },   // Mid
-    3: { early: 400, mid: 650, late: 750 },   // Offlane
-    4: { early: 250, mid: 400, late: 550 },   // Suporte
-    5: { early: 200, mid: 350, late: 450 }    // Hard Suporte
+    1: { early: 800,  mid: 1300, late: 1600 },  // Hard Carry — farm absurdo
+    2: { early: 750,  mid: 1200, late: 1450 },  // Mid — farm alto + ganks
+    3: { early: 550,  mid: 900,  late: 1150 },  // Offlane
+    4: { early: 400,  mid: 700,  late: 900 },   // Suporte — gold passivo ajuda muito
+    5: { early: 350,  mid: 600,  late: 800 }    // Hard Suporte
 };
 
-// Kills esperadas por posição por fase (acumuladas até o fim da fase)
+// Kills esperadas por posição por fase no TURBO (acumuladas)
+// Turbo: lutas mais cedo, mais frequentes, snowball mais rápido
 const KILLS_POR_POSICAO = {
-    1: { early: 2,  mid: 7,  late: 14 },
-    2: { early: 3,  mid: 8,  late: 15 },
-    3: { early: 2,  mid: 6,  late: 11 },
-    4: { early: 1,  mid: 4,  late: 8 },
-    5: { early: 0,  mid: 3,  late: 6 }
+    1: { early: 3,  mid: 10, late: 18 },
+    2: { early: 4,  mid: 11, late: 20 },
+    3: { early: 3,  mid: 8,  late: 14 },
+    4: { early: 2,  mid: 6,  late: 10 },
+    5: { early: 1,  mid: 4,  late: 8 }
 };
 
-// Deaths esperadas por posição por fase
+// Deaths esperadas por posição por fase no TURBO
 const DEATHS_POR_POSICAO = {
-    1: { early: 1, mid: 3, late: 5 },
-    2: { early: 1, mid: 3, late: 5 },
-    3: { early: 2, mid: 4, late: 7 },
-    4: { early: 2, mid: 5, late: 8 },
-    5: { early: 2, mid: 5, late: 9 }
+    1: { early: 1, mid: 3, late: 6 },
+    2: { early: 1, mid: 3, late: 6 },
+    3: { early: 2, mid: 5, late: 8 },
+    4: { early: 2, mid: 5, late: 9 },
+    5: { early: 3, mid: 6, late: 10 }
 };
 
-// Assists esperadas por posição por fase
+// Assists esperadas por posição por fase no TURBO
 const ASSISTS_POR_POSICAO = {
-    1: { early: 2,  mid: 8,  late: 16 },
-    2: { early: 2,  mid: 7,  late: 14 },
-    3: { early: 3,  mid: 9,  late: 18 },
-    4: { early: 3,  mid: 11, late: 22 },
-    5: { early: 3,  mid: 11, late: 22 }
+    1: { early: 3,  mid: 10, late: 20 },
+    2: { early: 3,  mid: 9,  late: 18 },
+    3: { early: 4,  mid: 12, late: 22 },
+    4: { early: 5,  mid: 15, late: 28 },
+    5: { early: 5,  mid: 15, late: 28 }
 };
 
-// Last Hits esperados por posição por fase
+// Last Hits esperados por posição por fase no TURBO
+// Farm acelerado: itens mais cedo = clear de wave mais rápido
 const LH_POR_POSICAO = {
-    1: { early: 40,  mid: 150, late: 280 },
-    2: { early: 35,  mid: 130, late: 250 },
-    3: { early: 25,  mid: 90,  late: 170 },
-    4: { early: 10,  mid: 35,  late: 60 },
-    5: { early: 5,   mid: 20,  late: 40 }
+    1: { early: 55,  mid: 200, late: 380 },
+    2: { early: 50,  mid: 180, late: 340 },
+    3: { early: 35,  mid: 120, late: 220 },
+    4: { early: 15,  mid: 50,  late: 90 },
+    5: { early: 8,   mid: 30,  late: 55 }
 };
 
-// Denies esperados por posição por fase
+// Denies esperados por posição por fase no TURBO
+// Menos relevante na Turbo — foco é em farm e lutas
 const DN_POR_POSICAO = {
-    1: { early: 5,  mid: 12, late: 15 },
-    2: { early: 8,  mid: 15, late: 18 },
-    3: { early: 4,  mid: 8,  late: 10 },
-    4: { early: 3,  mid: 5,  late: 7 },
-    5: { early: 4,  mid: 7,  late: 9 }
+    1: { early: 3,  mid: 6,  late: 8 },
+    2: { early: 5,  mid: 8,  late: 10 },
+    3: { early: 3,  mid: 5,  late: 7 },
+    4: { early: 2,  mid: 3,  late: 4 },
+    5: { early: 2,  mid: 4,  late: 5 }
 };
+
+// XPM esperado por posição no TURBO
+// XP passiva muito maior + levels mais rápidos = snowball de XP
+const XPM_POR_POSICAO = {
+    1: { early: 1000, mid: 1500, late: 1850 },  // Hard Carry
+    2: { early: 1100, mid: 1700, late: 2000 },  // Mid — maior XPM
+    3: { early: 900,  mid: 1350, late: 1650 },  // Offlane
+    4: { early: 700,  mid: 1100, late: 1350 },  // Suporte
+    5: { early: 600,  mid: 950,  late: 1200 }   // Hard Suporte
+};
+
+// DPM (Dano por Minuto) esperado por posição no TURBO
+// Teamfights mais frequentes + itens antes = DPM muito alto
+const DPM_POR_POSICAO = {
+    1: { early: 400,  mid: 750,  late: 1100 },  // Hard Carry — dano escala com itens
+    2: { early: 500,  mid: 850,  late: 1150 },  // Mid — burst damage alto
+    3: { early: 350,  mid: 600,  late: 850 },   // Offlane — dano moderado
+    4: { early: 250,  mid: 450,  late: 650 },   // Suporte — dano de habilidades
+    5: { early: 180,  mid: 350,  late: 500 }    // Hard Suporte — menor dano
+};
+
+// Proporções de progressão por fase para taxas (GPM, XPM, DPM)
+// Early o jogador ainda está crescendo, Mid estabiliza, Late é o pico
+const TAXA_PROGRESSAO = { early: 0.55, mid: 0.85, late: 1.0 };
 
 // Nomes amigáveis das stats
 const STAT_NOMES = {
@@ -134,10 +166,41 @@ async function fetchBenchmarks(heroId) {
 /**
  * Busca partidas do jogador com um herói específico no Turbo.
  * Usa as partidas já carregadas globalmente (globalMatches).
+ * Enriquece com dados de denies buscando detalhes das partidas.
  */
-function getPartidasPessoais(heroId) {
+async function getPartidasPessoais(heroId) {
     if (!globalMatches || globalMatches.length === 0) return [];
-    return globalMatches.filter(m => m.hero_id === heroId);
+    const partidas = globalMatches.filter(m => m.hero_id === heroId);
+
+    // Busca denies dos detalhes das partidas (máximo 5 para não sobrecarregar)
+    const paraBuscar = partidas.slice(0, 5);
+    const detalhesPromises = paraBuscar.map(async (partida) => {
+        try {
+            const detail = await apiFetch(
+                `https://api.opendota.com/api/matches/${partida.match_id}`
+            );
+            if (detail && detail.players) {
+                // Encontra o jogador pelo account_id ou player_slot
+                const jogador = detail.players.find(p =>
+                    (globalAccountId && p.account_id && p.account_id.toString() === globalAccountId.toString()) ||
+                    p.player_slot === partida.player_slot
+                );
+                if (jogador && jogador.denies !== undefined) {
+                    partida.denies = jogador.denies;
+                }
+                // Também pega net_worth se não tiver
+                if (jogador && jogador.net_worth && !partida.net_worth) {
+                    partida.net_worth = jogador.net_worth;
+                }
+            }
+        } catch (e) {
+            // Silencioso — não é crítico
+            console.warn('Erro ao buscar detalhes da partida:', partida.match_id, e);
+        }
+    });
+
+    await Promise.all(detalhesPromises);
+    return partidas;
 }
 
 // ============================================
@@ -191,7 +254,7 @@ function calcularMediaPessoal(partidas, campo) {
  */
 async function calcularMetas(heroId, posicao) {
     const benchmarks = await fetchBenchmarks(heroId);
-    const partidasPessoais = getPartidasPessoais(heroId);
+    const partidasPessoais = await getPartidasPessoais(heroId);
     const pos = parseInt(posicao) || 1;
 
     // Benchmark no percentil 50 (mediano) — é a "meta base"
@@ -227,6 +290,8 @@ async function calcularMetas(heroId, posicao) {
     const assistsFase = ASSISTS_POR_POSICAO[pos] || ASSISTS_POR_POSICAO[1];
     const lhFase = LH_POR_POSICAO[pos] || LH_POR_POSICAO[1];
     const dnFase = DN_POR_POSICAO[pos] || DN_POR_POSICAO[1];
+    const xpmFase = XPM_POR_POSICAO[pos] || XPM_POR_POSICAO[1];
+    const dpmFase = DPM_POR_POSICAO[pos] || DPM_POR_POSICAO[1];
 
     // Monta resultado por fase
     const fases = {};
@@ -265,7 +330,11 @@ async function calcularMetas(heroId, posicao) {
                 },
                 xpm: {
                     nome: 'XPM',
-                    meta: xpmTurbo || Math.round(gpmFase[faseKey] * 1.1)
+                    meta: xpmFase[faseKey]
+                },
+                dpm: {
+                    nome: 'DPM',
+                    meta: dpmFase[faseKey]
                 }
             }
         };
@@ -279,8 +348,13 @@ async function calcularMetas(heroId, posicao) {
         deaths: pessoalDeaths ? Math.round(pessoalDeaths * 10) / 10 : null,
         assists: pessoalAssists ? Math.round(pessoalAssists * 10) / 10 : null,
         lh: pessoalLH ? Math.round(pessoalLH) : null,
-        dn: null, // API /recentMatches não retorna denies
+        dn: calcularMediaPessoal(partidasPessoais, 'denies') !== null
+            ? Math.round(calcularMediaPessoal(partidasPessoais, 'denies'))
+            : null,
         dmg: pessoalDmg ? Math.round(pessoalDmg) : null,
+        dpm: (pessoalDmg && pessoalDuracao && pessoalDuracao > 0)
+            ? Math.round(pessoalDmg / (pessoalDuracao / 60))
+            : null,
         duracao: pessoalDuracao ? Math.round(pessoalDuracao / 60) : null,
         partidas: partidasPessoais.length
     };
@@ -431,14 +505,20 @@ async function gerarMetas() {
                 <td class="metas-valor-meta">${kdaMeta.meta}</td>
             </tr>`;
 
-            // LH / DN — LH estimado por fase, DN não disponível na API
+            // LH / DN — estimados por fase
             const lhMeta = fase.stats.lh_dn;
             let lhPessoalHTML = '';
             if (metas.pessoal.partidas > 0 && metas.pessoal.lh !== null) {
                 const lhEstimado = Math.round(metas.pessoal.lh * prop);
                 const lhOk = lhEstimado >= lhMeta.metaLH;
+                let dnHTML = '—';
+                if (metas.pessoal.dn !== null) {
+                    const dnEstimado = Math.round(metas.pessoal.dn * prop);
+                    const dnOk = dnEstimado >= lhMeta.metaDN;
+                    dnHTML = `<span class="${dnOk ? 'metas-bom' : 'metas-ruim'}">${dnEstimado}</span>`;
+                }
                 lhPessoalHTML = `<td class="metas-valor-pessoal">
-                    <span class="${lhOk ? 'metas-bom' : 'metas-ruim'}">${lhEstimado}</span> / —
+                    <span class="${lhOk ? 'metas-bom' : 'metas-ruim'}">${lhEstimado}</span> / ${dnHTML}
                 </td>`;
             }
             html += `<tr>
@@ -463,13 +543,15 @@ async function gerarMetas() {
                 <td class="metas-valor-meta">${nwMeta.formatado}</td>
             </tr>`;
 
-            // GPM — taxa, mesma em todas as fases
+            // GPM — estimado por fase (early é menor, late é o pico)
             const gpmMeta = fase.stats.gpm;
+            const taxaFase = TAXA_PROGRESSAO[faseKey];
             let gpmPessoalHTML = '';
             if (metas.pessoal.partidas > 0 && metas.pessoal.gpm !== null) {
-                const gpmOk = metas.pessoal.gpm >= gpmMeta.meta;
+                const gpmEstimado = Math.round(metas.pessoal.gpm * taxaFase);
+                const gpmOk = gpmEstimado >= gpmMeta.meta;
                 gpmPessoalHTML = `<td class="metas-valor-pessoal">
-                    <span class="${gpmOk ? 'metas-bom' : 'metas-ruim'}">${metas.pessoal.gpm}</span>
+                    <span class="${gpmOk ? 'metas-bom' : 'metas-ruim'}">${gpmEstimado}</span>
                 </td>`;
             }
             html += `<tr>
@@ -478,19 +560,36 @@ async function gerarMetas() {
                 <td class="metas-valor-meta">${gpmMeta.meta}</td>
             </tr>`;
 
-            // XPM — taxa, mesma em todas as fases
+            // XPM — estimado por fase
             const xpmMeta = fase.stats.xpm;
             let xpmPessoalHTML = '';
             if (metas.pessoal.partidas > 0 && metas.pessoal.xpm !== null) {
-                const xpmOk = metas.pessoal.xpm >= xpmMeta.meta;
+                const xpmEstimado = Math.round(metas.pessoal.xpm * taxaFase);
+                const xpmOk = xpmEstimado >= xpmMeta.meta;
                 xpmPessoalHTML = `<td class="metas-valor-pessoal">
-                    <span class="${xpmOk ? 'metas-bom' : 'metas-ruim'}">${metas.pessoal.xpm}</span>
+                    <span class="${xpmOk ? 'metas-bom' : 'metas-ruim'}">${xpmEstimado}</span>
                 </td>`;
             }
             html += `<tr>
                 <td class="metas-stat-nome">XPM</td>
                 ${xpmPessoalHTML}
                 <td class="metas-valor-meta">${xpmMeta.meta}</td>
+            </tr>`;
+
+            // DPM — Dano por Minuto, métrica chave na Turbo
+            const dpmMeta = fase.stats.dpm;
+            let dpmPessoalHTML = '';
+            if (metas.pessoal.partidas > 0 && metas.pessoal.dpm !== null) {
+                const dpmEstimado = Math.round(metas.pessoal.dpm * taxaFase);
+                const dpmOk = dpmEstimado >= dpmMeta.meta;
+                dpmPessoalHTML = `<td class="metas-valor-pessoal">
+                    <span class="${dpmOk ? 'metas-bom' : 'metas-ruim'}">${dpmEstimado}</span>
+                </td>`;
+            }
+            html += `<tr>
+                <td class="metas-stat-nome">DPM</td>
+                ${dpmPessoalHTML}
+                <td class="metas-valor-meta">${dpmMeta.meta}</td>
             </tr>`;
 
             html += `</tbody></table></div>`;
@@ -568,6 +667,21 @@ function renderizarDicas(metas, heroNome) {
             dicas.push({
                 tipo: 'melhorar',
                 texto: `Seus Last Hits (${p.lh}) estão abaixo da meta (${lhMeta}). Na Turbo o farm é mais rápido — aproveite!`
+            });
+        }
+    }
+
+    // Compara DPM
+    if (p.dpm !== null && lateMetas.dpm.meta) {
+        if (p.dpm >= lateMetas.dpm.meta) {
+            dicas.push({
+                tipo: 'bom',
+                texto: `Seu DPM (${p.dpm}) está acima da meta (${lateMetas.dpm.meta}). Boa participação nas lutas!`
+            });
+        } else if (p.dpm < lateMetas.dpm.meta * 0.7) {
+            dicas.push({
+                tipo: 'melhorar',
+                texto: `Seu DPM (${p.dpm}) está bem abaixo da meta (${lateMetas.dpm.meta}). Na Turbo, participe mais das teamfights!`
             });
         }
     }
