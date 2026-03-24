@@ -113,7 +113,7 @@ function logout() {
     const secoes = [
         'profile-section', 'turbo-summary', 'turbo-performance',
         'heroes-section', 'counters-section', 'items-recommend',
-        'simulator-section', 'friends-section', 'matches-section'
+        'simulator-section', 'metas-section', 'friends-section', 'matches-section'
     ];
     secoes.forEach(id => {
         const el = document.getElementById(id);
@@ -387,7 +387,9 @@ async function loadDashboard(accountId) {
         document.getElementById('friends-section').classList.remove('hidden');
         document.getElementById('matches-section').classList.remove('hidden');
         document.getElementById('simulator-section').classList.remove('hidden');
+        document.getElementById('metas-section').classList.remove('hidden');
         initSimulator(heroConstants, globalItemConstants);
+        initMetas(heroConstants, globalItemConstants);
 
         // Salva o ID na URL para manter o login ao atualizar a página
         salvarAccountIdNaUrl(accountId);

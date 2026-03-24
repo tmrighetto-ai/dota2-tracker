@@ -391,6 +391,28 @@
             </div>
         </section>
 
+        <!-- Metas no Turbo -->
+        <section id="metas-section" class="hidden">
+            <h2 class="section-title">🎯 METAS NO TURBO</h2>
+            <p class="sim-description">
+                Baseado no recurso Performance Goals do Dota Plus, adaptado para Turbo.
+                Mostra as metas que você deveria atingir em cada fase da partida,
+                comparando com benchmarks globais e seu próprio histórico.
+            </p>
+            <p class="metas-instrucao">
+                Selecione um herói no simulador acima, escolha a posição e clique em <strong>Gerar Recomendações</strong>.
+                Depois clique no botão abaixo para ver suas metas.
+            </p>
+            <div class="metas-actions">
+                <button id="btn-gerar-metas" class="sim-btn-gerar" onclick="gerarMetas()">
+                    🎯 Gerar Metas para o Herói Selecionado
+                </button>
+            </div>
+            <div id="metas-result" class="metas-result hidden">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+
         <!-- Comparativo com Amigos -->
         <section id="friends-section" class="hidden">
             <h2 class="section-title">⚡ COMPARATIVO COM AMIGOS</h2>
@@ -448,6 +470,7 @@
     <script src="js/items-recommend.js"></script>
     <script src="js/friends.js"></script>
     <script src="js/simulator.js"></script>
+    <script src="js/metas.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

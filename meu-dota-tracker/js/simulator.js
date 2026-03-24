@@ -153,8 +153,8 @@ function initSimulator(heroConstants, itemConstants) {
     // === PRESET DE TESTE — REMOVER QUANDO TERMINAR OS AJUSTES ===
     const PRESET_ATIVO = true;
     if (PRESET_ATIVO && heroConstants) {
-        const presetAlly =  [67, 94, 64, 31, 137]; // Spectre, Medusa, Jakiro, Lich, Primal Beast
-        const presetEnemy = [138, 76, 27, 98, 30];  // Muerta, OD, Shadow Shaman, Timbersaw, Witch Doctor
+        const presetAlly =  [138, 94, 64, 31, 137]; // Muerta, Medusa, Jakiro, Lich, Primal Beast
+        const presetEnemy = [67, 76, 27, 98, 30];   // Spectre, OD, Shadow Shaman, Timbersaw, Witch Doctor
         const presetAllyPos =  [2, 1, 4, 5, 3];     // Mid, Carry, Suporte, Hard Sup, Offlaner
         const presetEnemyPos = [1, 2, 4, 3, 5];     // Carry, Mid, Suporte, Offlaner, Hard Sup
 

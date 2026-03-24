@@ -1198,20 +1198,18 @@ td {
    SIMULADOR DE PARTIDA
    ============================================ */
 .sim-teams {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: 46% auto 46%;
+    justify-content: center;
+    align-items: start;
+    gap: 12px;
     margin-bottom: 20px;
 }
 
 .sim-team {
-    flex: 1;
+    width: 100%;
     min-width: 0;
-}
-
-.sim-team-dire {
-    /* Garante mesma largura que o time aliado */
-    flex: 1;
+    overflow: hidden;
 }
 
 .sim-team-title {
@@ -1236,7 +1234,8 @@ td {
 }
 
 .sim-slots {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 8px;
 }
 
@@ -1287,7 +1286,7 @@ td {
 
 .sim-slot {
     flex: 1;
-    min-height: 80px;
+    min-height: 90px;
     background: #0d1117;
     border: 2px dashed #30363d;
     border-radius: 8px;
@@ -1297,7 +1296,7 @@ td {
     justify-content: center;
     cursor: pointer;
     transition: all 0.2s;
-    padding: 8px 4px;
+    padding: 12px 4px;
     position: relative;
 }
 
@@ -1309,6 +1308,11 @@ td {
 .sim-slot-main {
     border-color: var(--turbo-orange);
     border-style: solid;
+}
+
+.sim-slot-enemy, .sim-team-dire .sim-slot-filled {
+    padding-top: 24px;
+    padding-bottom: 18px;
 }
 
 .sim-slot-enemy:hover {
@@ -1370,6 +1374,7 @@ td {
     height: 40px;
     object-fit: cover;
     border-radius: 4px;
+    margin-top: 4px;
 }
 
 .sim-slot-name {
@@ -1379,6 +1384,10 @@ td {
     margin-top: 4px;
     text-align: center;
     line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
 }
 
 .sim-slot-remove {
@@ -2732,7 +2741,7 @@ td {
     }
 
     .sim-teams {
-        flex-direction: column;
+        grid-template-columns: 1fr;
     }
 
     .sim-vs {
@@ -2741,11 +2750,7 @@ td {
     }
 
     .sim-slots {
-        flex-wrap: wrap;
-    }
-
-    .sim-slot {
-        min-width: calc(33% - 8px);
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .sim-hero-grid {
@@ -2767,4 +2772,320 @@ td {
     .share-modal-content {
         padding: 24px 20px;
     }
+
+    .metas-fases {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   METAS NO TURBO — Performance Goals
+   ============================================ */
+
+.metas-instrucao {
+    color: #8b949e;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.metas-actions {
+    margin-bottom: 20px;
+}
+
+.metas-result {
+    margin-top: 16px;
+}
+
+/* Header do herói */
+.metas-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.08), rgba(13, 17, 23, 0.6));
+    border: 1px solid rgba(245, 166, 35, 0.25);
+    border-radius: 10px;
+}
+
+.metas-hero-img {
+    width: 80px;
+    height: 45px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 2px solid var(--turbo-orange);
+}
+
+.metas-hero-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.metas-hero-name {
+    color: var(--turbo-orange);
+    font-size: 20px;
+    margin: 0;
+}
+
+.metas-hero-pos {
+    color: #8b949e;
+    font-size: 13px;
+}
+
+.metas-hero-partidas {
+    color: var(--accent-cyan);
+    font-size: 12px;
+}
+
+.metas-sem-dados {
+    color: #f0883e;
+}
+
+/* Benchmarks resumo (chips) */
+.metas-bench-resumo {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    background: rgba(30, 37, 48, 0.6);
+    border-radius: 8px;
+    border: 1px solid #21262d;
+}
+
+.metas-bench-label {
+    color: #8b949e;
+    font-size: 12px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.metas-bench-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.metas-chip {
+    background: rgba(245, 166, 35, 0.1);
+    border: 1px solid rgba(245, 166, 35, 0.3);
+    color: #e6e6e6;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.metas-chip b {
+    color: var(--turbo-orange);
+    margin-right: 4px;
+}
+
+/* Cards de Fases */
+.metas-fases {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.metas-fase-card {
+    background: rgba(13, 17, 23, 0.8);
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.metas-fase-card:hover {
+    border-color: #30363d;
+}
+
+.metas-fase-early {
+    border-top: 3px solid #4ade80;
+}
+
+.metas-fase-mid {
+    border-top: 3px solid var(--turbo-orange);
+}
+
+.metas-fase-late {
+    border-top: 3px solid #f87171;
+}
+
+.metas-fase-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    background: rgba(30, 37, 48, 0.5);
+    border-bottom: 1px solid #21262d;
+}
+
+.metas-fase-icone {
+    font-size: 18px;
+}
+
+.metas-fase-nome {
+    color: #e6e6e6;
+    font-weight: 600;
+    font-size: 14px;
+    flex: 1;
+}
+
+.metas-fase-tempo {
+    color: #8b949e;
+    font-size: 11px;
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+/* Tabela de stats */
+.metas-tabela {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.metas-tabela thead th {
+    color: #8b949e;
+    font-weight: 500;
+    font-size: 11px;
+    text-transform: uppercase;
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid #21262d;
+}
+
+.metas-tabela tbody tr {
+    border-bottom: 1px solid rgba(33, 38, 45, 0.5);
+    transition: background 0.15s;
+}
+
+.metas-tabela tbody tr:hover {
+    background: rgba(245, 166, 35, 0.04);
+}
+
+.metas-tabela tbody tr:last-child {
+    border-bottom: none;
+}
+
+.metas-stat-nome {
+    color: #c9d1d9;
+    padding: 8px 10px;
+    font-weight: 500;
+}
+
+.metas-valor-meta {
+    color: var(--turbo-orange);
+    padding: 8px 10px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.metas-valor-pessoal {
+    color: #e6e6e6;
+    padding: 8px 10px;
+    text-align: left;
+}
+
+.metas-bom {
+    color: #4ade80;
+    font-weight: 600;
+}
+
+.metas-ruim {
+    color: #f87171;
+    font-weight: 600;
+}
+
+.metas-na {
+    color: #484f58;
+    font-style: italic;
+}
+
+/* Dicas contextuais */
+.metas-dicas {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(30, 37, 48, 0.5);
+    border-radius: 10px;
+    border: 1px solid #21262d;
+}
+
+.metas-dicas-titulo {
+    color: #e6e6e6;
+    font-size: 14px;
+    margin: 0 0 12px 0;
+}
+
+.metas-dica {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #c9d1d9;
+    line-height: 1.5;
+}
+
+.metas-dica:last-child {
+    margin-bottom: 0;
+}
+
+.metas-dica-bom {
+    background: rgba(74, 222, 128, 0.08);
+    border-left: 3px solid #4ade80;
+}
+
+.metas-dica-melhorar {
+    background: rgba(248, 113, 113, 0.08);
+    border-left: 3px solid #f87171;
+}
+
+.metas-dica-info {
+    background: rgba(0, 229, 255, 0.06);
+    border-left: 3px solid var(--accent-cyan);
+}
+
+.metas-dica-icone {
+    flex-shrink: 0;
+    font-size: 14px;
+}
+
+/* Loading e avisos */
+.metas-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px;
+    color: #8b949e;
+}
+
+.metas-aviso {
+    text-align: center;
+    padding: 24px;
+    color: #8b949e;
+    background: rgba(30, 37, 48, 0.4);
+    border-radius: 8px;
+    border: 1px dashed #30363d;
+}
+
+.metas-erro {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+.loader-small {
+    width: 24px;
+    height: 24px;
+    border: 3px solid #21262d;
+    border-top-color: var(--turbo-orange);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
