@@ -27,7 +27,8 @@ meu-dota-tracker/
 
 ## API utilizada
 - OpenDota API (sem chave): https://api.opendota.com/api
-- Rotas com filtro Turbo: game_mode=23
+- Rotas com filtro Turbo: significant=0&game_mode=23 (AMBOS parâmetros são necessários!)
+- IMPORTANTE: Usar apenas game_mode=23 retorna vazio. O parâmetro significant=0 é obrigatório para a OpenDota retornar dados Turbo.
 - Imagens heróis: cdn.cloudflare.steamstatic.com
 - Login: Steam OpenID
 

@@ -122,7 +122,9 @@ function updateDisplay(heroConstants, itemConstants) {
 }
 
 /**
- * Renderiza os botões de paginação.
+ * Renderiza os botões de paginação inteligente.
+ * Mostra: ‹ 1 ... 4 5 [6] 7 8 ... 65 ›
+ * Sempre mostra primeira, última, e 2 vizinhos da página atual.
  */
 function renderPagination() {
     const nav        = document.getElementById('pagination');
@@ -135,15 +137,39 @@ function renderPagination() {
 
     let html = '';
 
+    // Contador de partidas
+    html += `<span class="pagination-info">${currentData.length} partidas</span>`;
+
     // Botão anterior
     html += `<button class="page-btn" onclick="changePage(${currentPage - 1})"
         ${currentPage === 1 ? 'disabled' : ''}>‹</button>`;
 
-    // Numeração das páginas
-    for (let i = 1; i <= totalPages; i++) {
-        html += `<button class="page-btn ${i === currentPage ? 'active' : ''}"
-            onclick="changePage(${i})">${i}</button>`;
+    // Lógica de páginas visíveis
+    const vizinhos = 2; // quantas páginas mostrar antes/depois da atual
+    const paginasVisiveis = new Set();
+
+    // Sempre mostra primeira e última
+    paginasVisiveis.add(1);
+    paginasVisiveis.add(totalPages);
+
+    // Mostra vizinhos da página atual
+    for (let i = currentPage - vizinhos; i <= currentPage + vizinhos; i++) {
+        if (i >= 1 && i <= totalPages) paginasVisiveis.add(i);
     }
+
+    // Converte para array ordenado
+    const paginas = [...paginasVisiveis].sort((a, b) => a - b);
+
+    // Renderiza com "..." entre gaps
+    let anterior = 0;
+    paginas.forEach(p => {
+        if (p - anterior > 1) {
+            html += `<span class="page-dots">...</span>`;
+        }
+        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}"
+            onclick="changePage(${p})">${p}</button>`;
+        anterior = p;
+    });
 
     // Botão próximo
     html += `<button class="page-btn" onclick="changePage(${currentPage + 1})"

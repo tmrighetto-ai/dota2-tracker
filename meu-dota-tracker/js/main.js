@@ -331,6 +331,9 @@ async function loadDashboard(accountId) {
         );
         const temDetalhes = matchesComDetalhes.length > 0;
 
+        // Ordena por data (mais recente primeiro)
+        matchesFinais.sort((a, b) => (b.start_time || 0) - (a.start_time || 0));
+
         // Salva nas variáveis globais
         globalAccountId = accountId;
         globalMatches = matchesFinais;

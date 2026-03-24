@@ -35,13 +35,34 @@ function renderCounters(turboHeroes, heroConstants) {
     const ordenados = [...relevantes].sort((a, b) => b.winRate - a.winRate);
 
     // Divide ao meio: metade de cima = forte, metade de baixo = fraco
-    // Garante que nenhum herói aparece nas duas listas
     const metade = Math.ceil(ordenados.length / 2);
     const bons = ordenados.slice(0, metade);
     const ruins = ordenados.slice(metade).reverse(); // piores primeiro
 
-    goodEl.innerHTML = renderCounterList(bons, heroConstants, true);
-    badEl.innerHTML = renderCounterList(ruins, heroConstants, false);
+    // Mostra 10 inicialmente, com botão "Ver mais" se tiver mais
+    const LIMITE_INICIAL = 10;
+
+    goodEl.innerHTML = renderCounterList(bons.slice(0, LIMITE_INICIAL), heroConstants, true);
+    if (bons.length > LIMITE_INICIAL) {
+        goodEl.innerHTML += `<button class="counter-ver-mais" onclick="expandirCounters('good', this)">Ver mais (${bons.length - LIMITE_INICIAL})</button>`;
+        goodEl.dataset.fullHtml = renderCounterList(bons, heroConstants, true);
+    }
+
+    badEl.innerHTML = renderCounterList(ruins.slice(0, LIMITE_INICIAL), heroConstants, false);
+    if (ruins.length > LIMITE_INICIAL) {
+        badEl.innerHTML += `<button class="counter-ver-mais" onclick="expandirCounters('bad', this)">Ver mais (${ruins.length - LIMITE_INICIAL})</button>`;
+        badEl.dataset.fullHtml = renderCounterList(ruins, heroConstants, false);
+    }
+}
+
+/**
+ * Expande a lista de counters mostrando todos os heróis.
+ */
+function expandirCounters(tipo, btn) {
+    const el = document.getElementById(tipo === 'good' ? 'counters-good' : 'counters-bad');
+    if (el && el.dataset.fullHtml) {
+        el.innerHTML = el.dataset.fullHtml;
+    }
 }
 
 /**

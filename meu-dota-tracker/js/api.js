@@ -94,26 +94,47 @@ async function fetchItemConstants() {
 }
 
 /**
- * Busca partidas Turbo do jogador (game_mode=23).
- * Tenta primeiro com filtro direto da API.
- * Se vier vazio, busca TODAS as partidas e filtra no código.
+ * Busca TODAS as partidas Turbo do jogador.
+ *
+ * A chave é usar significant=0 (partidas não-ranqueadas) — isso faz a OpenDota
+ * retornar as partidas Turbo com game_mode=23 corretamente.
+ * Sem esse parâmetro, /matches?game_mode=23 retorna vazio.
+ *
+ * Usa paginação (500 por request) e filtra client-side por game_mode=23.
  */
 async function fetchTurboMatches(accountId) {
     try {
-        // Tentativa 1: filtro direto pela API
-        const turbo = await apiFetch(
-            `${BASE_URL}/players/${accountId}/matches?game_mode=23&limit=200`
-        );
-        if (turbo && turbo.length > 0) return turbo;
+        let todasTurbo = [];
+        let offset = 0;
+        const LIMITE_POR_PAGINA = 500;
 
-        // Tentativa 2: busca todas as partidas e filtra no código
-        console.warn('Filtro Turbo da API veio vazio, buscando todas as partidas...');
-        const todas = await apiFetch(
-            `${BASE_URL}/players/${accountId}/matches?limit=500`
-        );
-        if (todas && todas.length > 0) {
-            const turboFiltradas = todas.filter(m => m.game_mode === 23);
-            if (turboFiltradas.length > 0) return turboFiltradas;
+        console.log('Buscando todas as partidas Turbo (significant=0)...');
+
+        while (true) {
+            const url = `${BASE_URL}/players/${accountId}/matches?significant=0&limit=${LIMITE_POR_PAGINA}&offset=${offset}`;
+            const pagina = await apiFetch(url);
+
+            if (!pagina || pagina.length === 0) break;
+
+            // Filtra apenas Turbo (game_mode=23) desta página
+            const turboNaPagina = pagina.filter(m => m.game_mode === 23);
+            todasTurbo = todasTurbo.concat(turboNaPagina);
+
+            console.log(`Turbo: ${todasTurbo.length} partidas encontradas (página ${offset / LIMITE_POR_PAGINA + 1})...`);
+
+            // Se veio menos que o limite, não tem mais páginas
+            if (pagina.length < LIMITE_POR_PAGINA) break;
+
+            // Se esta página não teve nenhuma Turbo, provavelmente já passou
+            // das partidas Turbo (mais antigas são de outros modos)
+            if (turboNaPagina.length === 0) break;
+
+            offset += LIMITE_POR_PAGINA;
+        }
+
+        if (todasTurbo.length > 0) {
+            console.log(`Total de partidas Turbo: ${todasTurbo.length}`);
+            return todasTurbo;
         }
 
         return [];
@@ -124,12 +145,13 @@ async function fetchTurboMatches(accountId) {
 }
 
 /**
- * Busca estatísticas de heróis filtradas por Turbo (game_mode=23).
+ * Busca estatísticas de heróis filtradas por Turbo.
+ * Usa significant=0&game_mode=23 para garantir que a OpenDota retorne os dados Turbo.
  */
 async function fetchTurboHeroes(accountId) {
     try {
         return await apiFetch(
-            `${BASE_URL}/players/${accountId}/heroes?game_mode=23`
+            `${BASE_URL}/players/${accountId}/heroes?significant=0&game_mode=23`
         );
     } catch (error) {
         console.error('Erro em fetchTurboHeroes:', error);
@@ -143,7 +165,7 @@ async function fetchTurboHeroes(accountId) {
 async function fetchTurboWinLoss(accountId) {
     try {
         return await apiFetch(
-            `${BASE_URL}/players/${accountId}/wl?game_mode=23`
+            `${BASE_URL}/players/${accountId}/wl?significant=0&game_mode=23`
         );
     } catch (error) {
         console.error('Erro em fetchTurboWinLoss:', error);
@@ -157,7 +179,7 @@ async function fetchTurboWinLoss(accountId) {
 async function fetchTurboTotals(accountId) {
     try {
         return await apiFetch(
-            `${BASE_URL}/players/${accountId}/totals?game_mode=23`
+            `${BASE_URL}/players/${accountId}/totals?significant=0&game_mode=23`
         );
     } catch (error) {
         console.error('Erro em fetchTurboTotals:', error);
@@ -185,7 +207,7 @@ async function fetchPeers(accountId) {
 async function fetchHeroMatchups(accountId, heroId) {
     try {
         return await apiFetch(
-            `${BASE_URL}/players/${accountId}/heroes?hero_id=${heroId}&game_mode=23`
+            `${BASE_URL}/players/${accountId}/heroes?hero_id=${heroId}&significant=0&game_mode=23`
         );
     } catch (error) {
         console.error('Erro em fetchHeroMatchups:', error);

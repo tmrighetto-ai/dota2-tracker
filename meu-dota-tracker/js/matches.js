@@ -35,14 +35,23 @@ function renderMatchesTable(matchesData, heroConstants, itemConstants) {
         const heroNameForImg = hInfo ? hInfo.name.replace('npc_dota_hero_','') : '';
         const heroImg = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/${heroNameForImg}.png`;
 
-        // net_worth não vem no /recentMatches, então calcula pelo GPM * duração
+        // Dados que podem não existir em partidas do /matches (só no /recentMatches)
+        const temDetalhes = match.kills !== undefined && match.kills !== null;
+
         const estimatedNW = match.net_worth
             ? match.net_worth
             : (match.gold_per_min && match.duration
                 ? Math.round(match.gold_per_min * match.duration / 60)
                 : 0);
-        const netWorth = estimatedNW > 0 ? (estimatedNW/1000).toFixed(1)+'k' : 'N/A';
-        const damage   = match.hero_damage ? (match.hero_damage/1000).toFixed(1)+'k' : 'N/A';
+
+        const kdaHtml = temDetalhes
+            ? `<span style="color:#39d353">${match.kills}</span> /
+               <span style="color:#ff4757">${match.deaths}</span> /
+               <span style="color:#f5a623">${match.assists}</span>`
+            : `<span class="match-loading-data" id="kda-${match.match_id}">...</span>`;
+
+        const netWorth = estimatedNW > 0 ? (estimatedNW/1000).toFixed(1)+'k' : '';
+        const damage = match.hero_damage ? (match.hero_damage/1000).toFixed(1)+'k' : '';
 
         const tr = document.createElement('tr');
         tr.className = 'match-row';
@@ -56,17 +65,13 @@ function renderMatchesTable(matchesData, heroConstants, itemConstants) {
             </td>
             <td>${formattedDate}</td>
             <td><span class="${resultClass}">${resultText}</span></td>
-            <td>
-                <span style="color:#39d353">${match.kills}</span> /
-                <span style="color:#ff4757">${match.deaths}</span> /
-                <span style="color:#f5a623">${match.assists}</span>
-            </td>
-            <td style="color:#f5a623">${netWorth}</td>
-            <td style="color:#ff9966">${damage}</td>
+            <td id="kda-cell-${match.match_id}">${kdaHtml}</td>
+            <td style="color:#f5a623" id="nw-${match.match_id}">${netWorth || '<span class="match-loading-data">...</span>'}</td>
+            <td style="color:#ff9966" id="dmg-${match.match_id}">${damage || '<span class="match-loading-data">...</span>'}</td>
             <td style="color:#8892a4">${durationMin}:${durationSec}</td>
             <td id="items-${match.match_id}">
                 <div style="display:flex;gap:3px">
-                    ${[0,1,2,3,4,5].map(() => 
+                    ${[0,1,2,3,4,5].map(() =>
                         `<div style="width:36px;height:26px;background:#0a0c10;border:1px solid #1e2535;border-radius:3px"></div>`
                     ).join('')}
                 </div>
@@ -75,28 +80,128 @@ function renderMatchesTable(matchesData, heroConstants, itemConstants) {
         tableBody.appendChild(tr);
     });
 
-    // Busca itens de cada partida com delay entre chamadas
-    // para evitar rate limit da API (60 req/min no OpenDota)
-    carregarItensComDelay(matchesData, itemConstants);
+    // Busca detalhes (itens + stats) de cada partida com delay
+    carregarDetalhesComDelay(matchesData, itemConstants);
 }
 
 /**
- * Carrega itens das partidas uma por vez, com delay entre cada chamada.
+ * Carrega detalhes (itens + stats) das partidas uma por vez, com delay.
  * Evita estourar o rate limit do OpenDota (60 req/min).
+ * Preenche KDA, NW, Dano e Itens para partidas que não tinham esses dados.
  */
-async function carregarItensComDelay(matches, itemConstants) {
+async function carregarDetalhesComDelay(matches, itemConstants) {
     for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         // Verifica se a célula ainda existe (usuário pode ter mudado de página)
         const container = document.getElementById(`items-${match.match_id}`);
         if (!container) continue;
 
-        await carregarItensDaPartida(match.match_id, match.hero_id, match.player_slot, itemConstants);
+        await carregarDetalhesDaPartida(match, itemConstants);
 
         // Espera 1 segundo entre cada chamada (max ~60 req/min, dentro do limite)
         if (i < matches.length - 1) {
             await new Promise(r => setTimeout(r, 1000));
         }
+    }
+}
+
+/**
+ * Busca detalhes completos de uma partida e atualiza todas as células.
+ */
+async function carregarDetalhesDaPartida(match, itemConstants) {
+    try {
+        const detail = await fetchMatchDetail(match.match_id);
+        if (!detail || !detail.players) return;
+
+        // Encontra o jogador
+        let player = null;
+        if (globalAccountId) {
+            player = detail.players.find(p =>
+                String(p.account_id) === String(globalAccountId)
+            );
+        }
+        if (!player && match.hero_id && match.player_slot !== undefined) {
+            player = detail.players.find(p =>
+                p.hero_id === match.hero_id && p.player_slot === match.player_slot
+            );
+        }
+        if (!player && match.player_slot !== undefined) {
+            player = detail.players.find(p => p.player_slot === match.player_slot);
+        }
+        if (!player) return;
+
+        // Atualiza KDA se estava faltando
+        const kdaCell = document.getElementById(`kda-cell-${match.match_id}`);
+        if (kdaCell && kdaCell.querySelector('.match-loading-data')) {
+            kdaCell.innerHTML = `
+                <span style="color:#39d353">${player.kills}</span> /
+                <span style="color:#ff4757">${player.deaths}</span> /
+                <span style="color:#f5a623">${player.assists}</span>`;
+        }
+
+        // Atualiza Net Worth
+        const nwCell = document.getElementById(`nw-${match.match_id}`);
+        if (nwCell && nwCell.querySelector('.match-loading-data')) {
+            const nw = player.net_worth || (player.gold_per_min && match.duration
+                ? Math.round(player.gold_per_min * match.duration / 60) : 0);
+            nwCell.innerHTML = nw > 0 ? `${(nw/1000).toFixed(1)}k` : '—';
+            nwCell.style.color = '#f5a623';
+        }
+
+        // Atualiza Dano
+        const dmgCell = document.getElementById(`dmg-${match.match_id}`);
+        if (dmgCell && dmgCell.querySelector('.match-loading-data')) {
+            const dmg = player.hero_damage || 0;
+            dmgCell.innerHTML = dmg > 0 ? `${(dmg/1000).toFixed(1)}k` : '—';
+            dmgCell.style.color = '#ff9966';
+        }
+
+        // Atualiza Itens
+        const itemIds = [
+            player.item_0, player.item_1, player.item_2,
+            player.item_3, player.item_4, player.item_5
+        ];
+
+        const purchaseTimes = {};
+        if (player.purchase_log) {
+            for (let i = player.purchase_log.length - 1; i >= 0; i--) {
+                const entry = player.purchase_log[i];
+                if (!purchaseTimes[entry.key]) {
+                    purchaseTimes[entry.key] = entry.time;
+                }
+            }
+        }
+
+        let html = '<div style="display:flex;gap:4px;flex-wrap:wrap">';
+        itemIds.forEach(id => {
+            if (!id || id === 0) {
+                html += `<div style="width:40px;height:36px;background:#0a0c10;border:1px solid #1e2535;border-radius:3px"></div>`;
+            } else {
+                const itemKey = Object.keys(itemConstants).find(k => itemConstants[k].id === id);
+                if (itemKey) {
+                    const imgUrl = `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${itemKey}.png`;
+                    const itemName = itemKey.replace(/_/g, ' ');
+                    const timeSec = purchaseTimes[itemKey];
+                    let timeStr = '';
+                    if (timeSec !== undefined) {
+                        const min = Math.floor(Math.abs(timeSec) / 60);
+                        const sec = (Math.abs(timeSec) % 60).toString().padStart(2, '0');
+                        timeStr = timeSec < 0 ? `-${min}:${sec}` : `${min}:${sec}`;
+                    }
+                    html += `<div class="match-item-cell" title="${itemName}${timeStr ? ' — comprado em ' + timeStr : ''}">
+                        <img src="${imgUrl}" class="match-item-img" onerror="this.style.display='none'">
+                        ${timeStr ? `<span class="match-item-time">${timeStr}</span>` : ''}
+                    </div>`;
+                }
+            }
+        });
+        html += '</div>';
+
+        const container = document.getElementById(`items-${match.match_id}`);
+        if (container) container.innerHTML = html;
+
+    } catch (e) {
+        console.warn('Erro ao carregar detalhes da partida', match.match_id, e);
     }
 }
 
