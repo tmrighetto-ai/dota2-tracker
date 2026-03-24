@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.opendota.com/api/players/88376774/recentMatches\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(json.dumps\\({k:m.get\\(k\\) for k in [''''match_id'''',''''game_mode'''',''''kills'''',''''deaths'''',''''assists'''',''''gold_per_min'''',''''xp_per_min'''',''''hero_damage'''',''''duration'''',''''player_slot'''',''''radiant_win'''']}, indent=2\\)\\) for m in data[:5]]\")",
+      "Bash(curl -s https://api.opendota.com/api/players/88376774/recentMatches)",
+      "Bash(python -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(json.dumps\\({k:m.get\\(k\\) for k in [''''match_id'''',''''game_mode'''',''''kills'''',''''deaths'''',''''assists'''',''''gold_per_min'''',''''xp_per_min'''',''''hero_damage'''',''''duration'''',''''player_slot'''',''''radiant_win'''']}, indent=2\\)\\) for m in data[:5]]\")",
+      "WebFetch(domain:api.opendota.com)",
+      "Bash(curl -s -X POST \"https://api.opendota.com/api/players/88376774/refresh\" -w \"\\\\nHTTP_STATUS:%{http_code}\")",
+      "WebSearch",
+      "WebFetch(domain:liquipedia.net)",
+      "WebFetch(domain:dota2.fandom.com)",
+      "Bash(curl -s \"https://api.opendota.com/api/constants/items\" -o \"/h/Backup/Projetos Visual Studio/Dota 2/items_api.json\")",
+      "Bash(node -e \":*)"
+    ]
+  }
+}

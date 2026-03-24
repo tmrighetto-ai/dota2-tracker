@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dota 2 Turbo Tracker — Dota Plus Enhancement</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <span class="logo-turbo">⚡ TURBO</span> TRACKER
+                <span class="logo-sub">DOTA PLUS ENHANCEMENT</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px">
+                <form id="search-form">
+                    <input type="text" id="account-id"
+                        placeholder="Cole aqui seu link do perfil Steam (ex: steamcommunity.com/id/seuNome)" required
+                        style="min-width:380px">
+                    <button type="submit">BUSCAR</button>
+                </form>
+                <button id="btn-share" class="btn-share hidden" onclick="abrirCompartilhar()">📤 COMPARTILHAR</button>
+                <button id="btn-logout" class="btn-logout hidden" onclick="logout()">SAIR</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Loading Spinner -->
+        <div id="loader" class="hidden">
+            <div class="spinner"></div>
+            <p>Carregando dados Turbo...</p>
+        </div>
+
+        <!-- Erro Message -->
+        <div id="error-msg" class="hidden"></div>
+
+        <!-- Tela de Boas-Vindas — aparece antes de buscar -->
+        <section id="welcome-section" class="welcome-section">
+            <div class="welcome-hero">
+                <h1 class="welcome-title">⚡ TURBO TRACKER</h1>
+                <p class="welcome-subtitle">Suas estatísticas de Turbo como nunca antes</p>
+            </div>
+
+            <div class="welcome-search-box card">
+                <h2>Como começar?</h2>
+                <p>Cole o <strong>link do seu perfil Steam</strong> na barra de busca acima e clique em BUSCAR.</p>
+
+                <div class="welcome-formats">
+                    <div class="welcome-format">
+                        <span class="format-label">FORMATO 1 — Link com nome personalizado</span>
+                        <code class="format-example">https://steamcommunity.com/id/seuNome</code>
+                    </div>
+                    <div class="welcome-format">
+                        <span class="format-label">FORMATO 2 — Link com ID numérico</span>
+                        <code class="format-example">https://steamcommunity.com/profiles/76561198XXXXXXXX</code>
+                    </div>
+                    <div class="welcome-format">
+                        <span class="format-label">FORMATO 3 — Só o número do Steam ID</span>
+                        <code class="format-example">76561198049642502</code>
+                    </div>
+                </div>
+            </div>
+
+            <div class="welcome-help card">
+                <h3>Onde encontro meu link do perfil Steam?</h3>
+                <div class="help-steps">
+                    <div class="help-step">
+                        <div class="step-number">1</div>
+                        <div class="step-text">
+                            <strong>Abra o Steam</strong> (programa no PC ou pelo navegador)
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">2</div>
+                        <div class="step-text">
+                            <strong>Clique no seu nome</strong> no canto superior direito e vá em <strong>"Ver meu perfil"</strong>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">3</div>
+                        <div class="step-text">
+                            <strong>Copie o link</strong> que aparece na barra de endereço do navegador.<br>
+                            Será algo como: <code>https://steamcommunity.com/id/seuNome</code>
+                        </div>
+                    </div>
+                    <div class="help-step">
+                        <div class="step-number">4</div>
+                        <div class="step-text">
+                            <strong>Cole na barra de busca</strong> acima e clique em BUSCAR!
+                        </div>
+                    </div>
+                </div>
+
+                <div class="help-note">
+                    <strong>Importante:</strong> Seu perfil Steam precisa estar <strong>público</strong> para que os dados sejam carregados.
+                    <br>Para verificar: Steam → Perfil → Editar Perfil → Configurações de Privacidade → "Meu perfil: Público".
+                </div>
+
+                <div class="help-alternative">
+                    <h4>Outro jeito de encontrar seu ID:</h4>
+                    <p>Abra o Dota 2 → clique no seu perfil no canto superior esquerdo → o número que aparece abaixo do seu nome é o <strong>Friend ID</strong>. Cole ele na busca!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Perfil do Jogador -->
+        <section id="profile-section" class="card hidden">
+            <div id="player-banner"></div>
+        </section>
+
+        <!-- Resumo Turbo — Cards com estatísticas gerais -->
+        <section id="turbo-summary" class="hidden">
+            <h2 class="section-title">⚡ RESUMO TURBO</h2>
+            <div class="turbo-stats-grid" id="turbo-stats-grid">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+
+        <!-- Desempenho ao Longo do Tempo -->
+        <section id="turbo-performance" class="hidden">
+            <h2 class="section-title">⚡ DESEMPENHO RECENTE</h2>
+            <div class="card">
+                <div id="performance-chart" class="performance-chart">
+                    <!-- Gráfico de barras das últimas 20 partidas -->
+                </div>
+                <div id="performance-averages" class="performance-averages">
+                    <!-- Médias comparativas -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Heróis Mais Jogados no Turbo -->
+        <section id="heroes-section" class="hidden">
+            <h2 class="section-title">⚡ HERÓIS MAIS JOGADOS NO TURBO</h2>
+            <div id="heroes-grid" class="grid"></div>
+        </section>
+
+        <!-- Counters de Heróis -->
+        <section id="counters-section" class="hidden">
+            <h2 class="section-title">⚡ COUNTERS — QUEM TE GANHA E QUEM VOCÊ GANHA</h2>
+            <div class="counters-container">
+                <div class="counter-column">
+                    <h3 class="counter-title good">VOCÊ É FORTE CONTRA</h3>
+                    <div id="counters-good" class="counter-list"></div>
+                </div>
+                <div class="counter-column">
+                    <h3 class="counter-title bad">VOCÊ É FRACO CONTRA</h3>
+                    <div id="counters-bad" class="counter-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recomendação de Itens -->
+        <section id="items-recommend" class="hidden">
+            <h2 class="section-title">⚡ RECOMENDAÇÃO DE ITENS</h2>
+            <div class="card">
+                <p class="section-desc">Selecione um herói para ver a build recomendada com base no meta atual e nos seus dados.</p>
+                <div class="item-recommend-hero-select">
+                    <input type="text" id="item-hero-search" placeholder="Digite o nome do herói...">
+                    <div id="item-hero-list" class="item-hero-grid"></div>
+                </div>
+                <div id="item-recommendation" class="hidden">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Partidas Recentes -->
+        <section id="matches-section" class="hidden">
+            <h2 class="section-title">⚡ PARTIDAS</h2>
+
+            <div class="filters-bar card">
+                <input type="text" id="filter-hero" placeholder="Filtrar herói...">
+                <input type="date" id="filter-date">
+                <input type="number" id="filter-networth" placeholder="Networth mín.">
+                <input type="number" id="filter-damage" placeholder="Dano mín.">
+
+                <div class="tabs">
+                    <button class="tab-btn active" data-filter="all">TODAS</button>
+                    <button class="tab-btn" data-filter="win">VITÓRIAS</button>
+                    <button class="tab-btn" data-filter="loss">DERROTAS</button>
+                </div>
+            </div>
+
+            <div class="table-container card">
+                <table id="matches-table">
+                    <thead>
+                        <tr>
+                            <th data-sort="match_id">ID</th>
+                            <th data-sort="hero">HERÓI</th>
+                            <th data-sort="start_time">DATA</th>
+                            <th data-sort="win">RESULTADO</th>
+                            <th>K / D / A</th>
+                            <th data-sort="net_worth">NET WORTH</th>
+                            <th data-sort="hero_damage">DANO</th>
+                            <th data-sort="duration">DUR.</th>
+                            <th>ITENS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matches-body"></tbody>
+                </table>
+            </div>
+
+            <div id="pagination" class="pagination-controls"></div>
+        </section>
+
+        <!-- Simulador de Partida — Recomendação em Tempo Real -->
+        <section id="simulator-section" class="hidden">
+            <h2 class="section-title">⚡ SIMULADOR DE PARTIDA</h2>
+            <div class="card">
+                <p class="section-desc">
+                    Selecione os 10 heróis da partida para receber recomendações inteligentes de itens.
+                    O sistema analisa o meta atual, counters e sinergia entre os heróis.
+                </p>
+
+                <!-- Seleção de Heróis -->
+                <div class="sim-teams">
+                    <!-- Time Aliado -->
+                    <div class="sim-team sim-team-radiant">
+                        <h3 class="sim-team-title sim-title-ally">SEU TIME (ALIADOS)</h3>
+                        <div class="sim-slots" id="sim-ally-slots">
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-main" id="sim-ally-0" onclick="abrirSeletorHeroi('ally', 0)">
+                                    <div class="sim-slot-label">VOCE</div>
+                                    <div class="sim-slot-placeholder">+ Heroi</div>
+                                </div>
+                                <select class="sim-pos-select" id="sim-pos-0" onchange="atualizarPosicao(0, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot" id="sim-ally-1" onclick="abrirSeletorHeroi('ally', 1)">
+                                    <div class="sim-slot-placeholder">+ Aliado</div>
+                                </div>
+                                <select class="sim-pos-select" id="sim-pos-1" onchange="atualizarPosicao(1, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot" id="sim-ally-2" onclick="abrirSeletorHeroi('ally', 2)">
+                                    <div class="sim-slot-placeholder">+ Aliado</div>
+                                </div>
+                                <select class="sim-pos-select" id="sim-pos-2" onchange="atualizarPosicao(2, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot" id="sim-ally-3" onclick="abrirSeletorHeroi('ally', 3)">
+                                    <div class="sim-slot-placeholder">+ Aliado</div>
+                                </div>
+                                <select class="sim-pos-select" id="sim-pos-3" onchange="atualizarPosicao(3, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot" id="sim-ally-4" onclick="abrirSeletorHeroi('ally', 4)">
+                                    <div class="sim-slot-placeholder">+ Aliado</div>
+                                </div>
+                                <select class="sim-pos-select" id="sim-pos-4" onchange="atualizarPosicao(4, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sim-vs">VS</div>
+
+                    <!-- Time Inimigo -->
+                    <div class="sim-team sim-team-dire">
+                        <h3 class="sim-team-title sim-title-enemy">TIME INIMIGO</h3>
+                        <div class="sim-slots" id="sim-enemy-slots">
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-enemy" id="sim-enemy-0" onclick="abrirSeletorHeroi('enemy', 0)">
+                                    <div class="sim-slot-placeholder">+ Inimigo</div>
+                                </div>
+                                <select class="sim-pos-select sim-pos-enemy" id="sim-epos-0" onchange="atualizarPosicaoInimigo(0, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-enemy" id="sim-enemy-1" onclick="abrirSeletorHeroi('enemy', 1)">
+                                    <div class="sim-slot-placeholder">+ Inimigo</div>
+                                </div>
+                                <select class="sim-pos-select sim-pos-enemy" id="sim-epos-1" onchange="atualizarPosicaoInimigo(1, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-enemy" id="sim-enemy-2" onclick="abrirSeletorHeroi('enemy', 2)">
+                                    <div class="sim-slot-placeholder">+ Inimigo</div>
+                                </div>
+                                <select class="sim-pos-select sim-pos-enemy" id="sim-epos-2" onchange="atualizarPosicaoInimigo(2, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-enemy" id="sim-enemy-3" onclick="abrirSeletorHeroi('enemy', 3)">
+                                    <div class="sim-slot-placeholder">+ Inimigo</div>
+                                </div>
+                                <select class="sim-pos-select sim-pos-enemy" id="sim-epos-3" onchange="atualizarPosicaoInimigo(3, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                            <div class="sim-slot-wrapper">
+                                <div class="sim-slot sim-slot-enemy" id="sim-enemy-4" onclick="abrirSeletorHeroi('enemy', 4)">
+                                    <div class="sim-slot-placeholder">+ Inimigo</div>
+                                </div>
+                                <select class="sim-pos-select sim-pos-enemy" id="sim-epos-4" onchange="atualizarPosicaoInimigo(4, this.value)">
+                                    <option value="">Pos</option>
+                                    <option value="1">Pos 1 — Hard Carry</option>
+                                    <option value="2">Pos 2 — Mid</option>
+                                    <option value="3">Pos 3 — Offlaner</option>
+                                    <option value="4">Pos 4 — Suporte</option>
+                                    <option value="5">Pos 5 — Hard Suporte</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Seletor de Herói (aparece ao clicar num slot) -->
+                <div id="sim-hero-picker" class="sim-hero-picker hidden">
+                    <input type="text" id="sim-hero-search" class="sim-hero-search" placeholder="Buscar herói...">
+                    <div id="sim-hero-grid" class="sim-hero-grid">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
+
+                <!-- Botão de gerar recomendação -->
+                <div style="text-align:center; margin:20px 0">
+                    <button id="sim-generate-btn" class="sim-generate-btn" onclick="gerarRecomendacaoSimulador()" disabled>
+                        GERAR RECOMENDAÇÃO DE ITENS
+                    </button>
+                    <p class="sim-generate-hint">Selecione pelo menos o seu herói e 1 inimigo</p>
+                </div>
+
+                <!-- Resultado da recomendação -->
+                <div id="sim-result" class="sim-result hidden">
+                    <!-- Preenchido via JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparativo com Amigos -->
+        <section id="friends-section" class="hidden">
+            <h2 class="section-title">⚡ COMPARATIVO COM AMIGOS</h2>
+            <div id="friends-grid" class="friends-grid">
+                <!-- Preenchido via JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Compartilhamento -->
+    <div id="share-modal" class="share-modal hidden" onclick="fecharCompartilhar(event)">
+        <div class="share-modal-content" onclick="event.stopPropagation()">
+            <button class="share-modal-close" onclick="fecharCompartilhar()">&times;</button>
+            <h2 class="share-modal-title">📤 Compartilhar suas Stats</h2>
+            <p class="share-modal-desc">Mostre suas estatísticas Turbo para seus amigos!</p>
+
+            <!-- Preview do texto que será compartilhado -->
+            <div id="share-preview" class="share-preview">
+                <!-- Preenchido via JS -->
+            </div>
+
+            <!-- Botões de redes sociais -->
+            <div class="share-buttons">
+                <button class="share-btn share-whatsapp" onclick="compartilharWhatsApp()">
+                    <span class="share-icon">💬</span> WhatsApp
+                </button>
+                <button class="share-btn share-twitter" onclick="compartilharTwitter()">
+                    <span class="share-icon">🐦</span> Twitter / X
+                </button>
+                <button class="share-btn share-facebook" onclick="compartilharFacebook()">
+                    <span class="share-icon">📘</span> Facebook
+                </button>
+                <button class="share-btn share-reddit" onclick="compartilharReddit()">
+                    <span class="share-icon">🤖</span> Reddit
+                </button>
+                <button class="share-btn share-telegram" onclick="compartilharTelegram()">
+                    <span class="share-icon">✈️</span> Telegram
+                </button>
+                <button class="share-btn share-copy" onclick="copiarTexto()">
+                    <span class="share-icon">📋</span> Copiar Texto
+                </button>
+            </div>
+
+            <p id="share-feedback" class="share-feedback hidden"></p>
+        </div>
+    </div>
+
+    <!-- Scripts em ordem de dependência -->
+    <script src="js/api.js"></script>
+    <script src="js/heroes.js"></script>
+    <script src="js/matches.js"></script>
+    <script src="js/filters.js"></script>
+    <script src="js/turbo.js"></script>
+    <script src="js/counters.js"></script>
+    <script src="js/items-recommend.js"></script>
+    <script src="js/friends.js"></script>
+    <script src="js/simulator.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
