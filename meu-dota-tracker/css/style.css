@@ -780,6 +780,35 @@ button:hover {
     border-color: var(--turbo-orange);
 }
 
+/* Card de jogador aleatório (não está na lista de amigos Steam) */
+.friend-card-random {
+    opacity: 0.65;
+}
+
+/* Badge "Steam" — amigo adicionado */
+.friend-badge-steam {
+    font-size: 10px;
+    background: #1b2838;
+    color: #66c0f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+/* Badge "Random" — jogador aleatório */
+.friend-badge-random {
+    font-size: 10px;
+    background: #1a1a2e;
+    color: #556677;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
 .friend-header {
     display: flex;
     align-items: center;

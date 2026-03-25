@@ -213,12 +213,13 @@ async function fetchTurboTotals(accountId) {
 }
 
 /**
- * Busca os amigos que mais jogam com o jogador.
+ * Busca os amigos que mais jogam Turbo com o jogador.
+ * Usa significant=0&game_mode=23 para filtrar apenas partidas Turbo.
  */
 async function fetchPeers(accountId) {
     try {
         return await apiFetch(
-            `${BASE_URL}/players/${accountId}/peers`
+            `${BASE_URL}/players/${accountId}/peers?significant=0&game_mode=23`
         );
     } catch (error) {
         console.error('Erro em fetchPeers:', error);
