@@ -263,16 +263,15 @@ async function loadDashboard(accountId) {
         // Pede ao OpenDota para sincronizar os dados do jogador
         refreshPlayer(accountId);
 
-        // Busca todos os dados em paralelo
+        // Busca dados base em paralelo (sem paginação pesada)
         const [
             profile, heroConstants, itemConstants,
-            turboMatches, turboHeroes, turboWL, turboTotals,
+            turboHeroes, turboWL, turboTotals,
             recentMatches, peers, heroStats
         ] = await Promise.all([
             fetchPlayerProfile(accountId),
             fetchHeroConstants(),
             fetchItemConstants(),
-            fetchTurboMatches(accountId),
             fetchTurboHeroes(accountId),
             fetchTurboWinLoss(accountId),
             fetchTurboTotals(accountId),
@@ -281,8 +280,20 @@ async function loadDashboard(accountId) {
             fetchPublicHeroStats()
         ]);
 
+        // Busca partidas Turbo separadamente (usa paginação, pode demorar)
+        let turboMatches = null;
+        try {
+            turboMatches = await fetchTurboMatches(accountId);
+        } catch (e) {
+            console.warn('Erro ao buscar partidas Turbo:', e);
+        }
+
         if (!profile || !profile.profile) {
-            throw new Error("Perfil privado ou ID inválido.");
+            throw new Error(
+                "Não foi possível carregar o perfil. Pode ser: " +
+                "perfil privado, ID inválido, ou limite da API OpenDota excedido. " +
+                "Se funcionava antes, aguarde alguns minutos e tente novamente."
+            );
         }
 
         // ===== MONTAGEM DAS PARTIDAS TURBO =====
@@ -422,7 +433,15 @@ async function loadDashboard(accountId) {
 
     } catch (error) {
         console.error("Erro:", error);
-        showError(`⚠️ ${error.message}`);
+        if (error.message === 'RATE_LIMIT' || error.message.includes('RATE_LIMIT')) {
+            showError(
+                '⚠️ Limite da API OpenDota excedido! A API gratuita tem um limite diário de chamadas. ' +
+                'Aguarde alguns minutos (ou até o reset diário às ~21h de Brasília) e tente novamente. ' +
+                'Dica: evite recarregar a página muitas vezes seguidas.'
+            );
+        } else {
+            showError(`⚠️ ${error.message}`);
+        }
         // Mostra a tela de boas-vindas novamente em caso de erro
         const welcomeEl2 = document.getElementById('welcome-section');
         if (welcomeEl2) welcomeEl2.classList.remove('hidden');

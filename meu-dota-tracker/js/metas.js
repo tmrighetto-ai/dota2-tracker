@@ -122,6 +122,18 @@ const DPM_POR_POSICAO = {
 // Early o jogador ainda está crescendo, Mid estabiliza, Late é o pico
 const TAXA_PROGRESSAO = { early: 0.55, mid: 0.85, late: 1.0 };
 
+// Ajuste de benchmark por posição
+// Os benchmarks do OpenDota são medianas globais (mistura de todas as posições).
+// Posições de core têm GPM/XPM muito acima da mediana, suportes abaixo.
+// Estes fatores ajustam o benchmark para refletir a posição real.
+const AJUSTE_POSICAO = {
+    1: { gpm: 1.25, xpm: 1.10, dpm: 1.20 },  // Hard Carry — GPM bem acima da média
+    2: { gpm: 1.15, xpm: 1.15, dpm: 1.25 },  // Mid — XPM e dano mais altos
+    3: { gpm: 0.95, xpm: 1.00, dpm: 0.95 },  // Offlane — próximo da média
+    4: { gpm: 0.75, xpm: 0.85, dpm: 0.80 },  // Suporte — farm reduzido
+    5: { gpm: 0.60, xpm: 0.75, dpm: 0.65 }   // Hard Suporte — menor farm/dano
+};
+
 // Nomes amigáveis das stats
 const STAT_NOMES = {
     gold_per_min:        'GPM',
@@ -172,34 +184,55 @@ async function getPartidasPessoais(heroId) {
     if (!globalMatches || globalMatches.length === 0) return [];
     const partidas = globalMatches.filter(m => m.hero_id === heroId);
 
-    // Busca denies dos detalhes das partidas (máximo 5 para não sobrecarregar)
-    const paraBuscar = partidas.slice(0, 5);
-    const detalhesPromises = paraBuscar.map(async (partida) => {
+    // Partidas do /matches?significant=0 têm kills mas NÃO têm gold_per_min, hero_damage, etc.
+    // Precisa buscar detalhes da API para preencher esses campos.
+    // Busca detalhes das partidas que não têm GPM/XPM/dano (vêm do /matches sem esses campos).
+    // Enriquece com dados da API de detalhe da partida para ter médias mais completas.
+    const semDetalhes = partidas.filter(m => m.gold_per_min === undefined || m.gold_per_min === null);
+    const paraBuscar = semDetalhes;
+
+    if (paraBuscar.length > 0) {
+        console.log(`Metas: buscando detalhes de ${paraBuscar.length} partidas de ${heroId}...`);
+    }
+
+    // Busca detalhes em sequência com delay para não estourar rate limit da API.
+    // A API gratuita do OpenDota limita chamadas simultâneas — se mandar 30 de uma vez, falha.
+    for (let i = 0; i < paraBuscar.length; i++) {
+        const partida = paraBuscar[i];
         try {
             const detail = await apiFetch(
                 `https://api.opendota.com/api/matches/${partida.match_id}`
             );
             if (detail && detail.players) {
-                // Encontra o jogador pelo account_id ou player_slot
                 const jogador = detail.players.find(p =>
                     (globalAccountId && p.account_id && p.account_id.toString() === globalAccountId.toString()) ||
                     p.player_slot === partida.player_slot
                 );
-                if (jogador && jogador.denies !== undefined) {
-                    partida.denies = jogador.denies;
-                }
-                // Também pega net_worth se não tiver
-                if (jogador && jogador.net_worth && !partida.net_worth) {
-                    partida.net_worth = jogador.net_worth;
+                if (jogador) {
+                    if (jogador.kills !== undefined) partida.kills = jogador.kills;
+                    if (jogador.deaths !== undefined) partida.deaths = jogador.deaths;
+                    if (jogador.assists !== undefined) partida.assists = jogador.assists;
+                    if (jogador.gold_per_min !== undefined) partida.gold_per_min = jogador.gold_per_min;
+                    if (jogador.xp_per_min !== undefined) partida.xp_per_min = jogador.xp_per_min;
+                    if (jogador.last_hits !== undefined) partida.last_hits = jogador.last_hits;
+                    if (jogador.denies !== undefined) partida.denies = jogador.denies;
+                    if (jogador.hero_damage !== undefined) partida.hero_damage = jogador.hero_damage;
+                    if (jogador.net_worth !== undefined) partida.net_worth = jogador.net_worth;
                 }
             }
         } catch (e) {
-            // Silencioso — não é crítico
             console.warn('Erro ao buscar detalhes da partida:', partida.match_id, e);
         }
-    });
+        // Delay de 200ms entre chamadas para respeitar o rate limit
+        if (i < paraBuscar.length - 1) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
 
-    await Promise.all(detalhesPromises);
+    // Retorna TODAS as partidas — calcularMediaPessoal() já ignora campos indefinidos.
+    // Kills/deaths/assists usam todas as partidas; GPM/XPM usam só as enriquecidas.
+    const enriquecidas = partidas.filter(m => m.gold_per_min !== undefined && m.gold_per_min !== null);
+    console.log(`Metas: ${partidas.length} partidas totais, ${enriquecidas.length} com dados completos (GPM/XPM/dano)`);
     return partidas;
 }
 
@@ -279,27 +312,45 @@ async function calcularMetas(heroId, posicao) {
     const pessoalDmg = calcularMediaPessoal(partidasPessoais, 'hero_damage');
     const pessoalDuracao = calcularMediaPessoal(partidasPessoais, 'duration');
 
-    // Ajusta benchmarks para Turbo (multiplicadores)
-    const gpmTurbo = gpmBase ? Math.round(gpmBase * TURBO_MULT.gold_per_min) : null;
-    const xpmTurbo = xpmBase ? Math.round(xpmBase * TURBO_MULT.xp_per_min) : null;
+    // Ajusta benchmarks para Turbo (multiplicadores) E posição
+    // Benchmark global × Turbo mult × ajuste da posição = meta específica do herói na role
+    const ajustePos = AJUSTE_POSICAO[pos] || AJUSTE_POSICAO[1];
+    const gpmTurbo = gpmBase ? Math.round(gpmBase * TURBO_MULT.gold_per_min * ajustePos.gpm) : null;
+    const xpmTurbo = xpmBase ? Math.round(xpmBase * TURBO_MULT.xp_per_min * ajustePos.xpm) : null;
+    const dpmTurbo = dmgMinBase ? Math.round(dmgMinBase * TURBO_MULT.hero_damage_per_min * ajustePos.dpm) : null;
 
-    // Metas por fase usando tabelas de posição
-    const gpmFase = GPM_POR_POSICAO[pos] || GPM_POR_POSICAO[1];
+    // Metas por fase: usa benchmarks do herói (Turbo) quando disponíveis,
+    // senão usa tabelas genéricas de posição como fallback
     const killsFase = KILLS_POR_POSICAO[pos] || KILLS_POR_POSICAO[1];
     const deathsFase = DEATHS_POR_POSICAO[pos] || DEATHS_POR_POSICAO[1];
     const assistsFase = ASSISTS_POR_POSICAO[pos] || ASSISTS_POR_POSICAO[1];
     const lhFase = LH_POR_POSICAO[pos] || LH_POR_POSICAO[1];
     const dnFase = DN_POR_POSICAO[pos] || DN_POR_POSICAO[1];
-    const xpmFase = XPM_POR_POSICAO[pos] || XPM_POR_POSICAO[1];
-    const dpmFase = DPM_POR_POSICAO[pos] || DPM_POR_POSICAO[1];
+    // Fallbacks das tabelas de posição (usados só quando benchmarks não existem)
+    const gpmFaseFallback = GPM_POR_POSICAO[pos] || GPM_POR_POSICAO[1];
+    const xpmFaseFallback = XPM_POR_POSICAO[pos] || XPM_POR_POSICAO[1];
+    const dpmFaseFallback = DPM_POR_POSICAO[pos] || DPM_POR_POSICAO[1];
 
     // Monta resultado por fase
     const fases = {};
     for (const [faseKey, faseInfo] of Object.entries(FASES_TURBO)) {
         const tempoMedio = (faseInfo.min + faseInfo.max) / 2;
+        const taxaFase = TAXA_PROGRESSAO[faseKey];
 
-        // Net Worth estimado = GPM da fase * tempo médio da fase em minutos
-        const nwMeta = Math.round(gpmFase[faseKey] * tempoMedio);
+        // GPM/XPM/DPM por fase: benchmark do herói × Turbo × progressão da fase
+        // (early é menor, mid é médio, late é o pico)
+        const gpmMetaFase = gpmTurbo
+            ? Math.round(gpmTurbo * taxaFase)
+            : gpmFaseFallback[faseKey];
+        const xpmMetaFase = xpmTurbo
+            ? Math.round(xpmTurbo * taxaFase)
+            : xpmFaseFallback[faseKey];
+        const dpmMetaFase = dpmTurbo
+            ? Math.round(dpmTurbo * taxaFase)
+            : dpmFaseFallback[faseKey];
+
+        // Net Worth estimado = GPM da fase × tempo médio da fase
+        const nwMeta = Math.round(gpmMetaFase * tempoMedio);
 
         fases[faseKey] = {
             nome: faseInfo.nome,
@@ -326,15 +377,15 @@ async function calcularMetas(heroId, posicao) {
                 },
                 gpm: {
                     nome: 'GPM',
-                    meta: gpmFase[faseKey]
+                    meta: gpmMetaFase
                 },
                 xpm: {
                     nome: 'XPM',
-                    meta: xpmFase[faseKey]
+                    meta: xpmMetaFase
                 },
                 dpm: {
                     nome: 'DPM',
-                    meta: dpmFase[faseKey]
+                    meta: dpmMetaFase
                 }
             }
         };
@@ -362,7 +413,7 @@ async function calcularMetas(heroId, posicao) {
     // Benchmarks globais (ajustados para Turbo) para referência
     const benchGlobal = {
         gpm: gpmTurbo,
-        gpmBom: gpmBom ? Math.round(gpmBom * TURBO_MULT.gold_per_min) : null,
+        gpmBom: gpmBom ? Math.round(gpmBom * TURBO_MULT.gold_per_min * ajustePos.gpm) : null,
         xpm: xpmTurbo,
         killsMin: killsMinBase ? Math.round(killsMinBase * TURBO_MULT.kills_per_min * 100) / 100 : null,
         lhMin: lhMinBase ? Math.round(lhMinBase * TURBO_MULT.last_hits_per_min * 10) / 10 : null,
@@ -483,10 +534,14 @@ async function gerarMetas() {
             // Tempo médio da fase em minutos (para estimar NW)
             const tempoMedioFase = (FASES_TURBO[faseKey].min + FASES_TURBO[faseKey].max) / 2;
 
+            // Helper: gera <td> pessoal — se não tem dados, mostra "—" para manter alinhamento
+            const temPessoal = metas.pessoal.partidas > 0;
+            const tdVazio = temPessoal ? '<td class="metas-valor-pessoal"><span class="metas-na">—</span></td>' : '';
+
             // K/D/A — estimado proporcionalmente por fase
             const kdaMeta = fase.stats.kda;
-            let kdaPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.kills !== null) {
+            let kdaPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.kills !== null) {
                 const kEst = Math.round(metas.pessoal.kills * prop * 10) / 10;
                 const dEst = Math.round(metas.pessoal.deaths * prop * 10) / 10;
                 const aEst = Math.round(metas.pessoal.assists * prop * 10) / 10;
@@ -507,8 +562,8 @@ async function gerarMetas() {
 
             // LH / DN — estimados por fase
             const lhMeta = fase.stats.lh_dn;
-            let lhPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.lh !== null) {
+            let lhPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.lh !== null) {
                 const lhEstimado = Math.round(metas.pessoal.lh * prop);
                 const lhOk = lhEstimado >= lhMeta.metaLH;
                 let dnHTML = '—';
@@ -529,8 +584,8 @@ async function gerarMetas() {
 
             // Net Worth — estimado do GPM pessoal × tempo médio da fase
             const nwMeta = fase.stats.nw;
-            let nwPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.gpm !== null) {
+            let nwPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.gpm !== null) {
                 const nwEstimado = Math.round(metas.pessoal.gpm * tempoMedioFase);
                 const nwOk = nwEstimado >= nwMeta.meta;
                 nwPessoalHTML = `<td class="metas-valor-pessoal">
@@ -546,8 +601,8 @@ async function gerarMetas() {
             // GPM — estimado por fase (early é menor, late é o pico)
             const gpmMeta = fase.stats.gpm;
             const taxaFase = TAXA_PROGRESSAO[faseKey];
-            let gpmPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.gpm !== null) {
+            let gpmPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.gpm !== null) {
                 const gpmEstimado = Math.round(metas.pessoal.gpm * taxaFase);
                 const gpmOk = gpmEstimado >= gpmMeta.meta;
                 gpmPessoalHTML = `<td class="metas-valor-pessoal">
@@ -562,8 +617,8 @@ async function gerarMetas() {
 
             // XPM — estimado por fase
             const xpmMeta = fase.stats.xpm;
-            let xpmPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.xpm !== null) {
+            let xpmPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.xpm !== null) {
                 const xpmEstimado = Math.round(metas.pessoal.xpm * taxaFase);
                 const xpmOk = xpmEstimado >= xpmMeta.meta;
                 xpmPessoalHTML = `<td class="metas-valor-pessoal">
@@ -578,8 +633,8 @@ async function gerarMetas() {
 
             // DPM — Dano por Minuto, métrica chave na Turbo
             const dpmMeta = fase.stats.dpm;
-            let dpmPessoalHTML = '';
-            if (metas.pessoal.partidas > 0 && metas.pessoal.dpm !== null) {
+            let dpmPessoalHTML = tdVazio;
+            if (temPessoal && metas.pessoal.dpm !== null) {
                 const dpmEstimado = Math.round(metas.pessoal.dpm * taxaFase);
                 const dpmOk = dpmEstimado >= dpmMeta.meta;
                 dpmPessoalHTML = `<td class="metas-valor-pessoal">

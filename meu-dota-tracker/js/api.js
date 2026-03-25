@@ -5,15 +5,38 @@ const BASE_URL = 'https://api.opendota.com/api';
  * CORREÇÃO: Aceita status 200 E 304 (cache do navegador).
  */
 async function apiFetch(url) {
-    // Adiciona timestamp para forçar dados frescos e ignorar cache
-    const separator = url.includes('?') ? '&' : '?';
-    const freshUrl = `${url}${separator}_=${Date.now()}`;
-    
+    // Sem cache-buster — deixa o navegador usar cache quando possível
+    // para economizar chamadas da API (limite diário gratuito)
+    const freshUrl = url;
+
     const response = await fetch(freshUrl);
+
+    // Detecta rate limit da OpenDota (429 ou corpo com "rate limit"/"limit exceeded")
+    if (response.status === 429) {
+        throw new Error('RATE_LIMIT');
+    }
+
     if (!response.ok && response.status !== 304) {
+        // Tenta ler o corpo para ver se é rate limit
+        try {
+            const errorBody = await response.json();
+            if (errorBody.error && errorBody.error.includes('limit')) {
+                throw new Error('RATE_LIMIT');
+            }
+        } catch (e) {
+            if (e.message === 'RATE_LIMIT') throw e;
+        }
         throw new Error(`Erro HTTP ${response.status} em: ${url}`);
     }
-    return await response.json();
+
+    const data = await response.json();
+
+    // A API pode retornar 200 mas com erro no corpo
+    if (data && data.error && data.error.includes('limit')) {
+        throw new Error('RATE_LIMIT');
+    }
+
+    return data;
 }
 
 /**
@@ -38,6 +61,8 @@ async function fetchPlayerProfile(accountId) {
         }
         return data;
     } catch (error) {
+        // Propaga rate limit para mostrar mensagem específica ao usuário
+        if (error.message === 'RATE_LIMIT') throw error;
         console.error('Erro em fetchPlayerProfile:', error);
         return null;
     }
