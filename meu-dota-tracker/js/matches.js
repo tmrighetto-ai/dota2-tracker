@@ -85,32 +85,112 @@ function renderMatchesTable(matchesData, heroConstants, itemConstants) {
 }
 
 /**
+ * Extrai apenas os dados do jogador que precisamos cachear.
+ * O match detail completo tem ~100KB (10 jogadores). Salvamos só ~1KB.
+ */
+function extrairDadosJogador(detail, match) {
+    let player = null;
+    if (globalAccountId) {
+        player = detail.players.find(p => String(p.account_id) === String(globalAccountId));
+    }
+    if (!player && match.hero_id && match.player_slot !== undefined) {
+        player = detail.players.find(p => p.hero_id === match.hero_id && p.player_slot === match.player_slot);
+    }
+    if (!player && match.player_slot !== undefined) {
+        player = detail.players.find(p => p.player_slot === match.player_slot);
+    }
+    if (!player) return null;
+
+    // Retorna só os campos que usamos na tabela
+    return {
+        account_id: player.account_id,
+        hero_id: player.hero_id,
+        player_slot: player.player_slot,
+        kills: player.kills,
+        deaths: player.deaths,
+        assists: player.assists,
+        net_worth: player.net_worth,
+        gold_per_min: player.gold_per_min,
+        xp_per_min: player.xp_per_min,
+        hero_damage: player.hero_damage,
+        last_hits: player.last_hits,
+        denies: player.denies,
+        item_0: player.item_0,
+        item_1: player.item_1,
+        item_2: player.item_2,
+        item_3: player.item_3,
+        item_4: player.item_4,
+        item_5: player.item_5,
+        purchase_log: player.purchase_log || []
+    };
+}
+
+/**
  * Carrega detalhes (itens + stats) das partidas uma por vez, com delay.
  * Evita estourar o rate limit do OpenDota (60 req/min).
  * Preenche KDA, NW, Dano e Itens para partidas que não tinham esses dados.
  */
 async function carregarDetalhesComDelay(matches, itemConstants) {
+    let chamadasAPI = 0;
+    let doCache = 0;
+
     for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
         // Verifica se a célula ainda existe (usuário pode ter mudado de página)
         const container = document.getElementById(`items-${match.match_id}`);
         if (!container) continue;
 
+        // Verifica se já tem no cache antes de chamar (para contar e decidir delay)
+        const temCache = sessionStorage.getItem(`match_detail_${match.match_id}`) !== null;
+
         await carregarDetalhesDaPartida(match, itemConstants);
 
-        // Espera 1 segundo entre cada chamada (max ~60 req/min, dentro do limite)
-        if (i < matches.length - 1) {
-            await new Promise(r => setTimeout(r, 1000));
+        if (temCache) {
+            doCache++;
+        } else {
+            chamadasAPI++;
+            // Delay só quando fez chamada real à API
+            if (i < matches.length - 1) {
+                await new Promise(r => setTimeout(r, 1000));
+            }
         }
     }
+
+    console.log(`Partidas: ${doCache} do cache, ${chamadasAPI} da API`);
 }
 
 /**
  * Busca detalhes completos de uma partida e atualiza todas as células.
+ * Usa sessionStorage como cache — partidas antigas nunca mudam,
+ * então evita gastar chamadas da API ao dar F5.
  */
 async function carregarDetalhesDaPartida(match, itemConstants) {
     try {
-        const detail = await fetchMatchDetail(match.match_id);
+        const cacheKey = `match_detail_${match.match_id}`;
+        let detail = null;
+
+        // Tenta buscar do cache primeiro
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            try {
+                detail = JSON.parse(cached);
+            } catch (e) {
+                sessionStorage.removeItem(cacheKey);
+            }
+        }
+
+        // Se não tinha cache, busca da API e salva
+        if (!detail) {
+            detail = await fetchMatchDetail(match.match_id);
+            if (detail && detail.players) {
+                // Salva apenas os dados do jogador (não o match inteiro, que é muito grande)
+                const playerData = extrairDadosJogador(detail, match);
+                if (playerData) {
+                    sessionStorage.setItem(cacheKey, JSON.stringify({ players: [playerData], _cached: true }));
+                }
+            }
+        }
+
         if (!detail || !detail.players) return;
 
         // Encontra o jogador
