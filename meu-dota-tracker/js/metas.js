@@ -145,12 +145,33 @@ const STAT_NOMES = {
     tower_damage:        'Dano em Torres'
 };
 
-// Cache de benchmarks já buscados
+// Cache de benchmarks já buscados (em memória — leve, não precisa persistir)
 let metasBenchmarkCache = {};
 
-// Cache de detalhes de partidas já buscadas (match_id → dados do jogador)
-// Evita repetir chamadas à API quando troca de herói ou clica "Gerar Metas" de novo
+// Cache de detalhes de partidas — persiste no sessionStorage
+// Sobrevive a F5 (recarregar), mas limpa ao fechar a aba
+// Economiza chamadas da API durante testes e navegação
 let matchDetailCache = {};
+
+// Carrega cache do sessionStorage ao iniciar
+try {
+    const saved = sessionStorage.getItem('matchDetailCache');
+    if (saved) {
+        matchDetailCache = JSON.parse(saved);
+        console.log(`Cache carregado: ${Object.keys(matchDetailCache).length} partidas do sessionStorage`);
+    }
+} catch (e) {
+    console.warn('Erro ao carregar cache do sessionStorage:', e);
+}
+
+// Salva cache no sessionStorage (chamada após buscar novos detalhes)
+function salvarCacheNoSession() {
+    try {
+        sessionStorage.setItem('matchDetailCache', JSON.stringify(matchDetailCache));
+    } catch (e) {
+        console.warn('Erro ao salvar cache no sessionStorage:', e);
+    }
+}
 
 // Estado do módulo
 let metasHeroConstants = null;
@@ -250,6 +271,11 @@ async function getPartidasPessoais(heroId) {
         if (i < paraBuscar.length - 1) {
             await new Promise(r => setTimeout(r, 200));
         }
+    }
+
+    // Salva cache no sessionStorage para sobreviver a F5
+    if (paraBuscar.length > 0) {
+        salvarCacheNoSession();
     }
 
     // Retorna TODAS as partidas — calcularMediaPessoal() já ignora campos indefinidos.
