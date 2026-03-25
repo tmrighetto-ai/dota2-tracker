@@ -158,7 +158,6 @@ try {
     const saved = sessionStorage.getItem('matchDetailCache');
     if (saved) {
         matchDetailCache = JSON.parse(saved);
-        console.log(`Cache carregado: ${Object.keys(matchDetailCache).length} partidas do sessionStorage`);
     }
 } catch (e) {
     console.warn('Erro ao carregar cache do sessionStorage:', e);
@@ -227,13 +226,6 @@ async function getPartidasPessoais(heroId) {
     // Só busca na API as que ainda faltam (não estavam no cache)
     const paraBuscar = partidas.filter(m => m.gold_per_min === undefined || m.gold_per_min === null);
 
-    if (preenchidosDoCache > 0) {
-        console.log(`Metas: ${preenchidosDoCache} partidas carregadas do cache (sem gastar API)`);
-    }
-    if (paraBuscar.length > 0) {
-        console.log(`Metas: buscando detalhes de ${paraBuscar.length} partidas na API...`);
-    }
-
     // Busca detalhes em sequência com delay para não estourar rate limit da API
     for (let i = 0; i < paraBuscar.length; i++) {
         const partida = paraBuscar[i];
@@ -280,8 +272,6 @@ async function getPartidasPessoais(heroId) {
 
     // Retorna TODAS as partidas — calcularMediaPessoal() já ignora campos indefinidos.
     // Kills/deaths/assists usam todas as partidas; GPM/XPM usam só as enriquecidas.
-    const enriquecidas = partidas.filter(m => m.gold_per_min !== undefined && m.gold_per_min !== null);
-    console.log(`Metas: ${partidas.length} partidas totais, ${enriquecidas.length} com dados completos (GPM/XPM/dano)`);
     return partidas;
 }
 

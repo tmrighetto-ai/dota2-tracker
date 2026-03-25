@@ -133,32 +133,22 @@ async function fetchTurboMatches(accountId) {
         let offset = 0;
         const LIMITE_POR_PAGINA = 500;
 
-        console.log('Buscando todas as partidas Turbo (significant=0)...');
-
         while (true) {
             const url = `${BASE_URL}/players/${accountId}/matches?significant=0&limit=${LIMITE_POR_PAGINA}&offset=${offset}`;
             const pagina = await apiFetch(url);
 
             if (!pagina || pagina.length === 0) break;
 
-            // Filtra apenas Turbo (game_mode=23) desta página
             const turboNaPagina = pagina.filter(m => m.game_mode === 23);
             todasTurbo = todasTurbo.concat(turboNaPagina);
 
-            console.log(`Turbo: ${todasTurbo.length} partidas encontradas (página ${offset / LIMITE_POR_PAGINA + 1})...`);
-
-            // Se veio menos que o limite, não tem mais páginas
             if (pagina.length < LIMITE_POR_PAGINA) break;
-
-            // Se esta página não teve nenhuma Turbo, provavelmente já passou
-            // das partidas Turbo (mais antigas são de outros modos)
             if (turboNaPagina.length === 0) break;
 
             offset += LIMITE_POR_PAGINA;
         }
 
         if (todasTurbo.length > 0) {
-            console.log(`Total de partidas Turbo: ${todasTurbo.length}`);
             return todasTurbo;
         }
 

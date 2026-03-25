@@ -156,7 +156,6 @@ async function carregarDetalhesComDelay(matches, itemConstants) {
         }
     }
 
-    console.log(`Partidas: ${doCache} do cache, ${chamadasAPI} da API`);
 }
 
 /**

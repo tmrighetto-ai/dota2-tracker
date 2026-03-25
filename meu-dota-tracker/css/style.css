@@ -140,27 +140,7 @@ header {
     font-weight: 600;
 }
 
-.btn-steam {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #1b2838, #2a475e);
-    border: 1px solid #4a90a4;
-    color: #c7d5e0;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-weight: 600;
-    font-size: 14px;
-    letter-spacing: 1px;
-    transition: all 0.2s;
-}
 
-.btn-steam:hover {
-    background: linear-gradient(135deg, #2a475e, #3a6078);
-    border-color: #66c0f4;
-}
 
 #search-form {
     display: flex;
@@ -780,35 +760,6 @@ button:hover {
     border-color: var(--turbo-orange);
 }
 
-/* Card de jogador aleatório (não está na lista de amigos Steam) */
-.friend-card-random {
-    opacity: 0.65;
-}
-
-/* Badge "Steam" — amigo adicionado */
-.friend-badge-steam {
-    font-size: 10px;
-    background: #1b2838;
-    color: #66c0f4;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 600;
-    margin-left: 6px;
-    vertical-align: middle;
-}
-
-/* Badge "Random" — jogador aleatório */
-.friend-badge-random {
-    font-size: 10px;
-    background: #1a1a2e;
-    color: #556677;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 600;
-    margin-left: 6px;
-    vertical-align: middle;
-}
-
 .friend-header {
     display: flex;
     align-items: center;
@@ -918,13 +869,6 @@ td {
 
 .win-text { color: var(--win-green); font-weight: 700; }
 .loss-text { color: var(--loss-red); font-weight: 700; }
-
-.item-icon {
-    width: 32px;
-    height: 24px;
-    margin-right: 2px;
-    border-radius: 2px;
-}
 
 .match-item-cell {
     display: flex;
@@ -1754,50 +1698,6 @@ td {
     padding: 2px 6px;
     border-radius: 3px;
     letter-spacing: 1px;
-}
-
-/* Core Items */
-.sim-core-section { margin-bottom: 24px; }
-
-.sim-core-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 10px;
-}
-
-.sim-core-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #0d1117;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 8px 12px;
-}
-
-.sim-core-img {
-    width: 40px;
-    height: 28px;
-    border-radius: 4px;
-}
-
-.sim-core-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.sim-core-name {
-    font-size: 12px;
-    font-weight: 600;
-    color: #c7d5e0;
-    text-transform: capitalize;
-}
-
-.sim-core-pct {
-    font-size: 11px;
-    color: var(--turbo-orange);
-    font-weight: 600;
-    font-family: var(--font-accent);
 }
 
 /* ============================================
@@ -2970,18 +2870,6 @@ td {
     border-color: #30363d;
 }
 
-.metas-fase-early {
-    border-top: 3px solid #4ade80;
-}
-
-.metas-fase-mid {
-    border-top: 3px solid var(--turbo-orange);
-}
-
-.metas-fase-late {
-    border-top: 3px solid #f87171;
-}
-
 .metas-fase-header {
     display: flex;
     align-items: center;
@@ -3103,21 +2991,6 @@ td {
 
 .metas-dica:last-child {
     margin-bottom: 0;
-}
-
-.metas-dica-bom {
-    background: rgba(74, 222, 128, 0.08);
-    border-left: 3px solid #4ade80;
-}
-
-.metas-dica-melhorar {
-    background: rgba(248, 113, 113, 0.08);
-    border-left: 3px solid #f87171;
-}
-
-.metas-dica-info {
-    background: rgba(0, 229, 255, 0.06);
-    border-left: 3px solid var(--accent-cyan);
 }
 
 .metas-dica-icone {

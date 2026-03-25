@@ -603,7 +603,6 @@ async function solicitarParsePartidas(matches) {
 
         try {
             await requestMatchParse(matchId);
-            console.log(`Parse solicitado: partida ${matchId} (${i + 1}/${matches.length})`);
         } catch (e) {
             // Silencioso — não é crítico
         }
@@ -613,7 +612,6 @@ async function solicitarParsePartidas(matches) {
             await new Promise(r => setTimeout(r, 1500));
         }
     }
-    console.log('Todas as partidas foram enviadas para parse no OpenDota.');
 }
 
 /* ============================================

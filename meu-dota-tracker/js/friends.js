@@ -30,8 +30,6 @@ function renderFriends(peers, heroConstants) {
         .filter(p => p.personaname && friendSet.has(String(p.account_id)))
         .sort((a, b) => (b.win || 0) - (a.win || 0));
 
-    console.log(`Amigos Steam com Turbo: ${friendsData.length} de ${peers.length} peers`);
-
     friendsPaginaAtual = 1;
     renderFriendsPagina();
 }
