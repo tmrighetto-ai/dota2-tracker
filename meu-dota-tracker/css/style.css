@@ -2751,6 +2751,266 @@ td {
 }
 
 /* ============================================
+   ALERTAS DE ITENS INIMIGOS
+   ============================================ */
+
+.sim-alertas {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border-color);
+}
+
+.sim-alertas-titulo {
+    font-family: var(--font-accent);
+    font-size: 16px;
+    font-weight: 700;
+    color: #ff4757;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+}
+
+.sim-alertas-desc {
+    font-size: 13px;
+    color: #8b949e;
+    margin-bottom: 16px;
+}
+
+/* Painel de heróis inimigos com botão de item */
+.sim-alertas-inimigos {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.alerta-enemy-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: #0d1117;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 100px;
+}
+
+.alerta-enemy-img {
+    width: 48px;
+    height: 27px;
+    border-radius: 4px;
+}
+
+.alerta-enemy-name {
+    font-size: 11px;
+    color: #c7d5e0;
+    text-align: center;
+    font-weight: 600;
+}
+
+.alerta-enemy-items {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-height: 24px;
+}
+
+.alerta-enemy-item-img {
+    width: 32px;
+    height: 24px;
+    border-radius: 3px;
+    border: 1px solid #1e2535;
+}
+
+.alerta-btn-add {
+    background: rgba(255, 71, 87, 0.15);
+    border: 1px dashed #ff4757;
+    color: #ff4757;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alerta-btn-add:hover {
+    background: rgba(255, 71, 87, 0.3);
+}
+
+/* Picker de itens para o inimigo */
+.alerta-item-picker {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #161b26;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    z-index: 100;
+    width: 280px;
+    max-height: 300px;
+    overflow-y: auto;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.alerta-item-picker input {
+    width: 100%;
+    background: #0d1117;
+    border: 1px solid var(--border-color);
+    color: #c7d5e0;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    outline: none;
+}
+
+.alerta-item-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+}
+
+.alerta-item-option {
+    width: 48px;
+    height: 36px;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+}
+
+.alerta-item-option:hover {
+    border-color: #ff4757;
+    transform: scale(1.1);
+}
+
+/* Notificações */
+.sim-alertas-notificacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.alerta-notif {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    animation: alertaEntrar 0.3s ease-out;
+}
+
+@keyframes alertaEntrar {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Alerta geral — inimigo fechou um item */
+.alerta-notif-geral {
+    background: rgba(255, 71, 87, 0.08);
+    border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+/* Alerta de counter — sugestão importante para countar */
+.alerta-notif-counter {
+    background: rgba(245, 166, 35, 0.12);
+    border: 2px solid rgba(245, 166, 35, 0.6);
+    box-shadow: 0 0 12px rgba(245, 166, 35, 0.15);
+}
+
+/* Alerta concluído */
+.alerta-notif-concluido {
+    background: rgba(57, 211, 83, 0.08);
+    border: 1px solid rgba(57, 211, 83, 0.3);
+    opacity: 0.6;
+}
+
+.alerta-notif-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.alerta-notif-body {
+    flex: 1;
+}
+
+.alerta-notif-titulo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #c7d5e0;
+}
+
+.alerta-notif-detalhe {
+    font-size: 12px;
+    color: #8b949e;
+    margin-top: 2px;
+}
+
+.alerta-notif-item-img {
+    width: 40px;
+    height: 30px;
+    border-radius: 4px;
+    border: 1px solid #1e2535;
+}
+
+.alerta-notif-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.alerta-btn-fazer {
+    background: rgba(245, 166, 35, 0.2);
+    border: 1px solid rgba(245, 166, 35, 0.5);
+    color: #f5a623;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alerta-btn-fazer:hover {
+    background: rgba(245, 166, 35, 0.4);
+}
+
+.alerta-btn-nao {
+    background: rgba(139, 148, 158, 0.15);
+    border: 1px solid rgba(139, 148, 158, 0.3);
+    color: #8b949e;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alerta-btn-nao:hover {
+    background: rgba(139, 148, 158, 0.3);
+}
+
+.alerta-btn-feito {
+    background: rgba(57, 211, 83, 0.2);
+    border: 1px solid rgba(57, 211, 83, 0.5);
+    color: #39d353;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alerta-btn-feito:hover {
+    background: rgba(57, 211, 83, 0.4);
+}
+
+/* ============================================
    METAS NO TURBO — Performance Goals
    ============================================ */
 

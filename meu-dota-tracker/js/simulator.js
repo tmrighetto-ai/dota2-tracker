@@ -495,6 +495,13 @@ async function gerarRecomendacaoSimulador() {
             resultEl, meuHero, recomendacao, analiseInimiga, matchups, enemyIds
         );
 
+        // 8. Mostra seção de alertas de itens inimigos (após DOM atualizar)
+        setTimeout(() => {
+            if (typeof mostrarAlertas === 'function') {
+                mostrarAlertas();
+            }
+        }, 100);
+
     } catch (e) {
         console.error('Erro no simulador:', e);
         resultEl.innerHTML = '<p style="color:#ff4757;text-align:center;padding:20px">Erro ao gerar recomendação. Tente novamente.</p>';
