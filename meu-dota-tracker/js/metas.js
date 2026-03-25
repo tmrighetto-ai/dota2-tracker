@@ -148,6 +148,10 @@ const STAT_NOMES = {
 // Cache de benchmarks já buscados
 let metasBenchmarkCache = {};
 
+// Cache de detalhes de partidas já buscadas (match_id → dados do jogador)
+// Evita repetir chamadas à API quando troca de herói ou clica "Gerar Metas" de novo
+let matchDetailCache = {};
+
 // Estado do módulo
 let metasHeroConstants = null;
 let metasItemConstants = null;
@@ -186,17 +190,30 @@ async function getPartidasPessoais(heroId) {
 
     // Partidas do /matches?significant=0 têm kills mas NÃO têm gold_per_min, hero_damage, etc.
     // Precisa buscar detalhes da API para preencher esses campos.
-    // Busca detalhes das partidas que não têm GPM/XPM/dano (vêm do /matches sem esses campos).
-    // Enriquece com dados da API de detalhe da partida para ter médias mais completas.
-    const semDetalhes = partidas.filter(m => m.gold_per_min === undefined || m.gold_per_min === null);
-    const paraBuscar = semDetalhes;
 
-    if (paraBuscar.length > 0) {
-        console.log(`Metas: buscando detalhes de ${paraBuscar.length} partidas de ${heroId}...`);
+    // Primeiro: preenche partidas que já estão no cache (sem gastar chamadas da API)
+    const semDetalhes = partidas.filter(m => m.gold_per_min === undefined || m.gold_per_min === null);
+    let preenchidosDoCache = 0;
+
+    for (const partida of semDetalhes) {
+        const cached = matchDetailCache[partida.match_id];
+        if (cached) {
+            Object.assign(partida, cached);
+            preenchidosDoCache++;
+        }
     }
 
-    // Busca detalhes em sequência com delay para não estourar rate limit da API.
-    // A API gratuita do OpenDota limita chamadas simultâneas — se mandar 30 de uma vez, falha.
+    // Só busca na API as que ainda faltam (não estavam no cache)
+    const paraBuscar = partidas.filter(m => m.gold_per_min === undefined || m.gold_per_min === null);
+
+    if (preenchidosDoCache > 0) {
+        console.log(`Metas: ${preenchidosDoCache} partidas carregadas do cache (sem gastar API)`);
+    }
+    if (paraBuscar.length > 0) {
+        console.log(`Metas: buscando detalhes de ${paraBuscar.length} partidas na API...`);
+    }
+
+    // Busca detalhes em sequência com delay para não estourar rate limit da API
     for (let i = 0; i < paraBuscar.length; i++) {
         const partida = paraBuscar[i];
         try {
@@ -209,15 +226,21 @@ async function getPartidasPessoais(heroId) {
                     p.player_slot === partida.player_slot
                 );
                 if (jogador) {
-                    if (jogador.kills !== undefined) partida.kills = jogador.kills;
-                    if (jogador.deaths !== undefined) partida.deaths = jogador.deaths;
-                    if (jogador.assists !== undefined) partida.assists = jogador.assists;
-                    if (jogador.gold_per_min !== undefined) partida.gold_per_min = jogador.gold_per_min;
-                    if (jogador.xp_per_min !== undefined) partida.xp_per_min = jogador.xp_per_min;
-                    if (jogador.last_hits !== undefined) partida.last_hits = jogador.last_hits;
-                    if (jogador.denies !== undefined) partida.denies = jogador.denies;
-                    if (jogador.hero_damage !== undefined) partida.hero_damage = jogador.hero_damage;
-                    if (jogador.net_worth !== undefined) partida.net_worth = jogador.net_worth;
+                    // Monta objeto com os campos para cache e preenchimento
+                    const dados = {};
+                    if (jogador.kills !== undefined) dados.kills = jogador.kills;
+                    if (jogador.deaths !== undefined) dados.deaths = jogador.deaths;
+                    if (jogador.assists !== undefined) dados.assists = jogador.assists;
+                    if (jogador.gold_per_min !== undefined) dados.gold_per_min = jogador.gold_per_min;
+                    if (jogador.xp_per_min !== undefined) dados.xp_per_min = jogador.xp_per_min;
+                    if (jogador.last_hits !== undefined) dados.last_hits = jogador.last_hits;
+                    if (jogador.denies !== undefined) dados.denies = jogador.denies;
+                    if (jogador.hero_damage !== undefined) dados.hero_damage = jogador.hero_damage;
+                    if (jogador.net_worth !== undefined) dados.net_worth = jogador.net_worth;
+
+                    // Salva no cache e preenche a partida
+                    matchDetailCache[partida.match_id] = dados;
+                    Object.assign(partida, dados);
                 }
             }
         } catch (e) {
