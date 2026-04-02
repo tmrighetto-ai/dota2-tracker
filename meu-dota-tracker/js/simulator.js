@@ -76,7 +76,7 @@ const COUNTER_ITEMS = {
     // Contra dano mágico pesado
     magic_damage: {
         tags: ['Nuker'],
-        items: ['black_king_bar', 'pipe', 'glimmer_cape', 'eternal_shroud', 'cloak'],
+        items: ['black_king_bar', 'pipe', 'glimmer_cape', 'cloak'],
         reason: 'Proteção contra dano mágico'
     },
     // Contra heróis invisíveis
@@ -621,7 +621,10 @@ const ITEM_PHASE_MAP = {
     hand_of_midas: 'early', mask_of_madness: 'early', falcon_blade: 'early',
     dragon_lance: 'early', echo_sabre: 'early', oblivion_staff: 'early',
     force_staff: 'early', glimmer_cape: 'early', ghost: 'early',
-    pavise: 'early', fluffy_hat: 'early', cornucopia: 'early',
+    pavise: 'early', fluffy_hat: 'early',
+    essence_distiller: 'early',
+    specialists_array: 'mid', crellas_crozier: 'late', hydras_breath: 'late',
+    consecrated_wraps: 'mid',
     phylactery: 'early', witch_blade: 'early',
     // Mid game (15-30 min, itens ~2500-4500 gold)
     blink: 'mid', mekansm: 'mid', pipe: 'mid', crimson_guard: 'mid',
@@ -635,7 +638,7 @@ const ITEM_PHASE_MAP = {
     blade_mail: 'mid', aether_lens: 'mid', veil_of_discord: 'mid',
     helm_of_the_overlord: 'mid', armlet: 'mid', shadow_blade: 'mid',
     invis_sword: 'mid', hurricane_pike: 'mid', linken_sphere: 'mid',
-    eternal_shroud: 'mid', harpoon: 'mid', disperser: 'mid',
+    harpoon: 'mid', disperser: 'mid',
     // Late game (30+ min, itens 4500+ gold)
     butterfly: 'late', heart: 'late', satanic: 'late', skadi: 'late',
     assault: 'late', shivas_guard: 'late', mjollnir: 'late',
@@ -1484,7 +1487,7 @@ const ITENS_EVOLUIVEIS = {
     maelstrom:          'mjollnir',
     shadow_blade:       'silver_edge',
     invis_sword:        'silver_edge',
-    hood_of_defiance:   'eternal_shroud',
+    hood_of_defiance:   'pipe',
     vanguard:           'crimson_guard',
     mekansm:            'guardian_greaves',
     arcane_boots:       'guardian_greaves',
@@ -1516,7 +1519,8 @@ const COMPONENTES_IGNORAR = new Set([
     'stout_shield', 'quelling_blade', 'blight_stone', 'orb_of_venom',
     'wind_lace', 'ring_of_regen', 'sobi_mask', 'ring_of_tarrasque',
     'shadow_amulet', 'ghost', 'blink', 'blitz_knuckles', 'fluffy_hat',
-    'cornucopia', 'tiara_of_selemene', 'diadem'
+    'tiara_of_selemene', 'diadem', 'eternal_shroud', 'cornucopia',
+    'chasm_stone', 'shawl', 'splintmail', 'wizard_hat'
 ]);
 
 function converterItensPopularesSim(itemData, maxItems, filtrarComponentes, fase) {

@@ -134,6 +134,35 @@ const ALERTA_COUNTERS = {
             { item: 'black_king_bar', motivo: 'Não pode ser hexado com BKB', posicoes: [1, 2, 3] },
             { item: 'sphere', motivo: "Linken's bloqueia o hex", posicoes: [1, 2] }
         ]
+    },
+
+    // === NOVOS ITENS DO PATCH 7.41 ===
+
+    'crellas_crozier': {
+        nome: "Crella's Crozier",
+        counters: [
+            { item: 'nullifier', motivo: 'Dispela a forma etérea do Crozier', posicoes: [1, 2] },
+            { item: 'black_king_bar', motivo: 'Imune ao burst mágico durante a forma etérea', posicoes: [1, 2, 3] }
+        ]
+    },
+    'hydras_breath': {
+        nome: "Hydra's Breath",
+        counters: [
+            { item: 'black_king_bar', motivo: 'BKB bloqueia o veneno do Hydra', posicoes: [1, 2, 3] },
+            { item: 'ghost', motivo: 'Forma etérea é imune ao dano físico dos projéteis', posicoes: [1, 2, 3] }
+        ]
+    },
+    'specialists_array': {
+        nome: "Specialist's Array",
+        counters: [
+            { item: 'ghost', motivo: 'Forma etérea bloqueia os projéteis físicos extras', posicoes: [4, 5] }
+        ]
+    },
+    'consecrated_wraps': {
+        nome: 'Consecrated Wraps',
+        counters: [
+            { item: 'nullifier', motivo: 'Dispela as cargas de redução de dano', posicoes: [1, 2] }
+        ]
     }
 };
 
@@ -295,6 +324,8 @@ const ITENS_EXCLUIDOS = new Set([
     'magic_wand', 'bottle', 'soul_ring', 'ring_of_basilius',
     'headdress', 'buckler', 'urn_of_shadows', 'tranquil_boots',
     'wraith_band', 'null_talisman', 'bracer',
+    // Itens removidos no patch 7.41
+    'eternal_shroud', 'cornucopia',
     // Itens removidos/obsoletos que ainda existem na API
     'trident', 'poor_mans_shield', 'iron_talon', 'ring_of_aquila',
     'helm_of_the_dominator', 'necronomicon', 'necronomicon_2', 'necronomicon_3',
@@ -321,10 +352,16 @@ const ITENS_EXCLUIDOS = new Set([
     'occult_bracelet', 'safety_bubble', 'dandelion_amulet', 'whisper_of_the_dread',
     'spark_of_courage', 'gossamer_cape', 'duelist_gloves', 'royal_jelly',
     'pupils_gift', 'bullwhip', 'eye_of_the_vizier', 'orb_of_destruction',
-    'defiant_shell', 'vindicators_axe', 'specialist_array', 'doubloon',
+    'defiant_shell', 'vindicators_axe', 'doubloon',
     'craggy_coat', 'gladiator_helm',
     'martyrs_plate', 'phylactery', 'disperser_2',
-    'warriors_axe', 'katana', 'dagger_of_ristul'
+    'warriors_axe', 'katana', 'dagger_of_ristul',
+    // Novos neutros adicionados no patch 7.41
+    'foragers_kit', 'stonefeather_satchel', 'possessed_mask', 'partisan_brand',
+    'spellslinger', 'stormcrafter', 'conjurers_catalyst', 'dandelion_amulet',
+    'enchanters_bauble', 'prophets_pendulum', 'harmonizer', 'witchbane',
+    // Novos componentes adicionados no patch 7.41
+    'chasm_stone', 'shawl', 'splintmail', 'wizard_hat', 'consecrated_wraps'
 ]);
 
 /**
