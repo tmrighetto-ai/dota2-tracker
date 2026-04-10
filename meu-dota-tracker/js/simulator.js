@@ -936,7 +936,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Pipe of Insight',
         fase: 'mid',
         motivo: 'Barreira magica nao stacka — protege o time inteiro contra nukers',
-        quemFazMelhor: ['offlaner', 'support'],
+        quemFazMelhor: ['offlaner', 'tank', 'support'],
         contraOQue: ['magic_damage', 'Nuker'],
         impacto: 'alto'
     },
@@ -944,7 +944,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Crimson Guard',
         fase: 'mid',
         motivo: 'Barreira fisica nao stacka — essencial contra dano fisico em area',
-        quemFazMelhor: ['offlaner', 'support'],
+        quemFazMelhor: ['offlaner', 'tank', 'support'],
         contraOQue: ['phys_damage', 'summons', 'Carry'],
         impacto: 'alto'
     },
@@ -975,8 +975,8 @@ const ITENS_DECISAO_TIME = {
     lotus_orb: {
         nome: 'Lotus Orb',
         fase: 'mid',
-        motivo: 'Dispel + reflect — 1 por time, no heroi que fica perto dos cores',
-        quemFazMelhor: ['offlaner', 'support'],
+        motivo: 'Dispel + reflect — 1 por time, no heroi que fica perto dos cores (tank/offlaner ideal)',
+        quemFazMelhor: ['offlaner', 'tank', 'support'],
         contraOQue: ['disable', 'Disabler'],
         impacto: 'alto'
     },
@@ -1001,7 +1001,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Assault Cuirass',
         fase: 'late',
         motivo: 'Aura de armor e attack speed nao stacka — decisao de alto impacto',
-        quemFazMelhor: ['offlaner', 'core'],
+        quemFazMelhor: ['offlaner', 'tank', 'core'],
         contraOQue: ['phys_damage', 'Carry'],
         impacto: 'alto'
     },
@@ -1017,7 +1017,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Guardian Greaves',
         fase: 'late',
         motivo: 'Upgrade do Mek+Arcane — 1 por time, no heroi que inicia as lutas',
-        quemFazMelhor: ['support', 'offlaner'],
+        quemFazMelhor: ['support', 'offlaner', 'tank'],
         contraOQue: [],
         impacto: 'alto'
     },
@@ -1025,7 +1025,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Wraith Pact',
         fase: 'late',
         motivo: 'Aura de reducao de dano nao stacka — muda teamfights',
-        quemFazMelhor: ['offlaner', 'support'],
+        quemFazMelhor: ['offlaner', 'tank', 'support'],
         contraOQue: ['phys_damage'],
         impacto: 'alto'
     },
