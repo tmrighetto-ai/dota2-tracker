@@ -325,7 +325,7 @@ const ITENS_EXCLUIDOS = new Set([
     'headdress', 'buckler', 'urn_of_shadows', 'tranquil_boots',
     'wraith_band', 'null_talisman', 'bracer',
     // Itens removidos no patch 7.41
-    'eternal_shroud', 'cornucopia',
+    'eternal_shroud', 'cornucopia', 'caster_rapier',
     // Itens removidos/obsoletos que ainda existem na API
     'trident', 'poor_mans_shield', 'iron_talon', 'ring_of_aquila',
     'helm_of_the_dominator', 'necronomicon', 'necronomicon_2', 'necronomicon_3',
@@ -357,7 +357,7 @@ const ITENS_EXCLUIDOS = new Set([
     'martyrs_plate', 'phylactery', 'disperser_2',
     'warriors_axe', 'katana', 'dagger_of_ristul',
     // Novos neutros adicionados no patch 7.41
-    'foragers_kit', 'stonefeather_satchel', 'possessed_mask', 'partisan_brand',
+    'foragers_kit', 'stonefeather_satchel', 'possessed_mask', 'partisans_brand',
     'spellslinger', 'stormcrafter', 'conjurers_catalyst', 'dandelion_amulet',
     'enchanters_bauble', 'prophets_pendulum', 'harmonizer', 'witchbane',
     // Novos componentes adicionados no patch 7.41

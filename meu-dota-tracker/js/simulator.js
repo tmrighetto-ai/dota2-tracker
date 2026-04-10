@@ -693,25 +693,25 @@ function getLabelFase(fase) {
  * Os itens neutros sao dropados de creeps neutros e so 1 de cada por time.
  */
 /**
- * NEUTROS_POR_TIER — Patch 7.40 (sistema de artefatos + encantamentos)
- * Tier 1: 3-9 min | Tier 2: 15-25 min | Tier 3: 25-35 min | Tier 4: 37+ min | Tier 5: 60+ min
- * O time escolhe 1 artefato das opcoes que aparecem.
+ * NEUTROS_POR_TIER — Patch 7.41 (sistema de artefatos + encantamentos)
+ * Tier 1: inicio | Tier 2: ~10 min | Tier 3: ~18 min | Tier 4: ~25 min | Tier 5: ~40 min
+ * O time escolhe 1 artefato das opcoes que aparecem (dropado de creeps neutros).
  * Recomendamos os melhores por tipo de heroi.
  */
 const NEUTROS_POR_TIER = {
     1: {
         tier: 1,
-        timing: '3 min',
-        turboTiming: '~3 min',
+        timing: 'inicio',
+        turboTiming: 'inicio do jogo',
         fase: 'early',
         itens: {
             core_melee: [
                 { nome: 'Duelist Gloves', desc: 'Passivo: +20 Attack Speed quando ha herois inimigos em 1200 unidades', img: 'duelist_gloves' },
-                { nome: 'Chipped Vest', desc: 'Passivo: Retorna 30 dano a herois e 20 a creeps quando atacado', img: 'chipped_vest' }
+                { nome: 'Forager\'s Kit', desc: 'Ativo: Coleta arvores em troca de consumiveis — bônus de stat, mana ou dano', img: 'foragers_kit' }
             ],
             core_ranged: [
                 { nome: 'Weighted Dice', desc: 'Passivo: Base damage e bounty calculados 2x, pega o maior valor', img: 'weighted_dice' },
-                { nome: 'Pollywog Charm', desc: 'Ativo: +8 HP regen em aliado por 14s. Na agua: +10% move speed', img: 'polliwog_charm' }
+                { nome: 'Stonefeather Satchel', desc: 'Toggle: +20% move speed OU +10 armor — troca entre mobilidade e resistencia', img: 'stonefeather_satchel' }
             ],
             support: [
                 { nome: 'Kobold Cup', desc: 'Ativo: +10% move speed para aliados em 1000 de raio por 6s', img: 'kobold_cup' },
@@ -731,7 +731,7 @@ const NEUTROS_POR_TIER = {
         itens: {
             core_melee: [
                 { nome: 'Defiant Shell', desc: 'Passivo: Contra-ataca ao ser atacado com 80% do dano normal', img: 'defiant_shell' },
-                { nome: 'Searing Signet', desc: 'Passivo: Dano magico acima de 55 queima inimigos por 90 dano em 6s', img: 'searing_signet' }
+                { nome: 'Crippling Crossbow', desc: 'Ativo: 75 dano + 80% slow + -40% cura no alvo por 4s', img: 'crippling_crossbow' }
             ],
             core_ranged: [
                 { nome: "Tumbler's Toy", desc: 'Ativo: Pula 300 unidades para frente. Desativa por 3s se levar dano', img: 'pogo_stick' },
@@ -759,10 +759,10 @@ const NEUTROS_POR_TIER = {
             ],
             core_ranged: [
                 { nome: 'Psychic Headband', desc: 'Ativo: Empurra alvo 400 unidades para longe', img: 'psychic_headband' },
-                { nome: 'Whisper of the Dread', desc: 'Passivo: -15% visao diurna, +10% Spell Damage', img: 'whisper_of_the_dread' }
+                { nome: 'Spellslinger', desc: 'Passivo: 20% da mana gasta em habilidades e recuperada ao longo de 10s', img: 'spellslinger' }
             ],
             support: [
-                { nome: 'Psychic Headband', desc: 'Ativo: Empurra alvo 400 unidades para longe', img: 'psychic_headband' },
+                { nome: 'Partisan\'s Brand', desc: 'Passivo: +9% de dano magico causado a unidades controladas por jogadores', img: 'partisans_brand' },
                 { nome: 'Jidi Pollen Bag', desc: 'Ativo: -30% cura e 9% do HP max como dano em 9s (raio 700)', img: 'jidi_pollen_bag' }
             ],
             tank: [
@@ -779,7 +779,7 @@ const NEUTROS_POR_TIER = {
         itens: {
             core_melee: [
                 { nome: "Flayer's Bota", desc: 'Ativo: +15% base damage e +30 AS por 6s. Passivo: Heroi morrendo perto reseta o CD', img: 'flayers_bota' },
-                { nome: 'Crippling Crossbow', desc: 'Ativo: 75 dano + 80% slow + -40% heal por 4s', img: 'crippling_crossbow' }
+                { nome: "Prophet's Pendulum", desc: 'Passivo: 30% do dano recebido e distribuido ao longo de 5s (letal)', img: 'prophets_pendulum' }
             ],
             core_ranged: [
                 { nome: "Flayer's Bota", desc: 'Ativo: +15% base damage e +30 AS por 6s. Passivo: Kill/assist reseta CD', img: 'flayers_bota' },
@@ -1016,6 +1016,15 @@ const ITENS_DECISAO_TIME = {
         motivo: 'Hex poderoso mas caro — 1 por time geralmente e suficiente',
         quemFazMelhor: ['support', 'core'],
         contraOQue: ['gap_close', 'Carry'],
+        impacto: 'alto'
+    },
+
+    crellas_crozier: {
+        nome: "Crella's Crozier",
+        fase: 'late',
+        motivo: 'Aura passiva de -30% cura inimiga nao stacka com Spirit Vessel — 1 por time',
+        quemFazMelhor: ['support', 'offlaner'],
+        contraOQue: ['heal'],
         impacto: 'alto'
     },
 
@@ -1304,9 +1313,14 @@ function detectarItensCompartilhados(meuHeroId, allyIds, itemPopMap, enemyIds) {
         // Mostra o item se 2+ herois do time podem fazer
         // TODOS os jogadores precisam saber dos conflitos de itens de time
         if (candidatos.length >= 2) {
-            // Ordena por pontuação (quem tem mais = quem deve fazer)
+            // Ordena por pontuação para exibição nas barras
             candidatos.sort((a, b) => b.pontuacao - a.pontuacao);
-            const melhorCandidato = candidatos[0];
+            // melhorCandidato: quem tem maior % de uso real na API (mais confiavel)
+            // Se ninguem tem dados da API (pct=0), usa pontuação como fallback
+            const candidatosComPct = candidatos.filter(c => c.pct > 0);
+            const melhorCandidato = candidatosComPct.length > 0
+                ? candidatosComPct.reduce((best, c) => c.pct > best.pct ? c : best)
+                : candidatos[0];
             const euDevoFazer = melhorCandidato.heroId === meuHeroId;
 
             // Verifica se este item é ESPECIALMENTE necessário nesta partida
