@@ -1537,30 +1537,35 @@ function montarRecomendacao(meuHero, itemPop, analiseInimiga, analiseAliada, mat
     }
 
     // 4. Para Pos 3 (offlaner/tank): garante que itens defensivos essenciais
-    //    apareçam na build mesmo se a API nao os listar no itemPopularity.
+    //    apareçam na build mesmo se a API nao os listar no top do itemPopularity.
     //    Pipe, Crimson Guard e Lotus Orb sao core em qualquer offlaner.
+    //    Busca a porcentagem real da API (mid_game_items) para exibir normalmente.
     const heroInfo = determinarPapelHeroi(meuHero.id);
     if (heroInfo.posicao === 3) {
-        const itensDefensivosPos3 = [
-            { name: 'pipe', fase: 'mid', motivo: 'Barreira magica para o time — essencial no offlaner' },
-            { name: 'crimson_guard', fase: 'mid', motivo: 'Barreira física para o time — essencial no offlaner' },
-            { name: 'lotus_orb', fase: 'mid', motivo: 'Dispel + reflect — protege aliados e a si mesmo' }
-        ];
-        itensDefensivosPos3.forEach(def => {
-            if (itensJaAdicionados.has(def.name)) return;
-            const itemInfo = simItemConstants[def.name];
+        const itensDefensivosPos3 = ['pipe', 'crimson_guard', 'lotus_orb'];
+        // Total de partidas na fase mid (para calcular %)
+        let totalMid = 0;
+        if (itemPop && itemPop.mid_game_items) {
+            for (const cnt of Object.values(itemPop.mid_game_items)) {
+                if (cnt > totalMid) totalMid = cnt;
+            }
+        }
+        itensDefensivosPos3.forEach(itemName => {
+            if (itensJaAdicionados.has(itemName)) return;
+            const itemInfo = simItemConstants[itemName];
             if (!itemInfo) return;
-            itensJaAdicionados.add(def.name);
-            resultado.fases[def.fase].push({
-                name: def.name,
-                displayName: def.name.replace(/_/g, ' '),
-                img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${def.name}.png`,
-                porcentagem: 'ESSENCIAL',
-                pct: 0,
-                count: 0,
-                fase: def.fase,
-                isEssencial: true,
-                reason: def.motivo
+            // Busca contagem real na API (mid_game_items)
+            const count = (itemPop && itemPop.mid_game_items && itemPop.mid_game_items[itemName]) || 0;
+            const pctReal = totalMid > 0 ? ((count / totalMid) * 100).toFixed(1) : '0.0';
+            itensJaAdicionados.add(itemName);
+            resultado.fases.mid.push({
+                name: itemName,
+                displayName: itemName.replace(/_/g, ' '),
+                img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${itemName}.png`,
+                porcentagem: pctReal,
+                pct: count,
+                count: count,
+                fase: 'mid'
             });
         });
     }
@@ -1914,7 +1919,7 @@ function renderizarResultadoSimulador(container, meuHero, rec, analise, matchups
                         <div class="sim-phase-item-info">
                             <span class="sim-phase-item-name">${item.displayName}</span>
                             <div class="sim-phase-item-meta">
-                                <small class="sim-phase-item-pct" style="color:${item.isEssencial ? '#f5a623' : corFase}">${item.isEssencial ? item.porcentagem : item.porcentagem + '% uso'}</small>
+                                <small class="sim-phase-item-pct" style="color:${corFase}">${item.porcentagem}% uso</small>
                                 ${custoHtml}
                                 ${timingHtml}
                             </div>
