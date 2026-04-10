@@ -702,7 +702,7 @@ const NEUTROS_POR_TIER = {
     1: {
         tier: 1,
         timing: 'inicio',
-        turboTiming: 'inicio do jogo',
+        turboTiming: '~3 min',
         fase: 'early',
         itens: {
             core_melee: [
@@ -715,6 +715,10 @@ const NEUTROS_POR_TIER = {
             ],
             support: [
                 { nome: 'Kobold Cup', desc: 'Ativo: +10% move speed para aliados em 1000 de raio por 6s', img: 'kobold_cup' },
+                { nome: 'Ash Legion Shield', desc: 'Ativo: Barreira de 140 dano fisico para aliados em 800 unidades por 6s', img: 'ash_legion_shield' }
+            ],
+            support_int: [
+                { nome: 'Kobold Cup', desc: 'Ativo: +10% move speed para aliados em 1000 de raio por 6s', img: 'kobold_cup' },
                 { nome: 'Occult Bracelet', desc: 'Passivo: Cada ataque recebido da +0.4 mana regen, ate 5 stacks (5s)', img: 'occult_bracelet' }
             ],
             tank: [
@@ -726,7 +730,7 @@ const NEUTROS_POR_TIER = {
     2: {
         tier: 2,
         timing: '15 min',
-        turboTiming: '~10 min',
+        turboTiming: '~8 min',
         fase: 'early',
         itens: {
             core_melee: [
@@ -739,7 +743,11 @@ const NEUTROS_POR_TIER = {
             ],
             support: [
                 { nome: 'Essence Ring', desc: 'Ativo: +240 HP atual e maximo por 10s', img: 'essence_ring' },
-                { nome: 'Mana Draught', desc: 'Ativo: Restaura 70 + 3% mana max em 6s. Passivo: -30% CD na agua', img: 'mana_draught' }
+                { nome: 'Defiant Shell', desc: 'Passivo: Contra-ataca ao ser atacado com 80% do dano normal', img: 'defiant_shell' }
+            ],
+            support_int: [
+                { nome: 'Mana Draught', desc: 'Ativo: Restaura 70 + 3% mana max em 6s. Passivo: -30% CD na agua', img: 'mana_draught' },
+                { nome: 'Searing Signet', desc: 'Passivo: Dano magico acima de 55 queima inimigos por 90 dano em 6s', img: 'searing_signet' }
             ],
             tank: [
                 { nome: 'Defiant Shell', desc: 'Passivo: Contra-ataca ao ser atacado com 80% do dano normal', img: 'defiant_shell' },
@@ -750,7 +758,7 @@ const NEUTROS_POR_TIER = {
     3: {
         tier: 3,
         timing: '27 min',
-        turboTiming: '~18 min',
+        turboTiming: '~13 min',
         fase: 'mid',
         itens: {
             core_melee: [
@@ -762,8 +770,12 @@ const NEUTROS_POR_TIER = {
                 { nome: 'Spellslinger', desc: 'Passivo: 20% da mana gasta em habilidades e recuperada ao longo de 10s', img: 'spellslinger' }
             ],
             support: [
-                { nome: 'Partisan\'s Brand', desc: 'Passivo: +9% de dano magico causado a unidades controladas por jogadores', img: 'partisans_brand' },
+                { nome: 'Psychic Headband', desc: 'Ativo: Empurra alvo 400 unidades para longe', img: 'psychic_headband' },
                 { nome: 'Jidi Pollen Bag', desc: 'Ativo: -30% cura e 9% do HP max como dano em 9s (raio 700)', img: 'jidi_pollen_bag' }
+            ],
+            support_int: [
+                { nome: 'Spellslinger', desc: 'Passivo: 20% da mana gasta em habilidades e recuperada ao longo de 10s', img: 'spellslinger' },
+                { nome: 'Partisan\'s Brand', desc: 'Passivo: +9% de dano magico causado a unidades controladas por jogadores', img: 'partisans_brand' }
             ],
             tank: [
                 { nome: 'Unrelenting Eye', desc: 'Passivo: +50% slow resistance, -10% por heroi inimigo no raio de ataque', img: 'unrelenting_eye' },
@@ -774,7 +786,7 @@ const NEUTROS_POR_TIER = {
     4: {
         tier: 4,
         timing: '37 min',
-        turboTiming: '~25 min',
+        turboTiming: '~18 min',
         fase: 'late',
         itens: {
             core_melee: [
@@ -789,6 +801,10 @@ const NEUTROS_POR_TIER = {
                 { nome: 'Rattlecage', desc: 'Passivo: Apos 180 dano, dispara em 2 inimigos: 110 dano + slow', img: 'rattlecage' },
                 { nome: "Idol of Scree'Auk", desc: 'Ativo: +50% slow res, phased, +25% evasion por 5s', img: 'idol_of_screeauk' }
             ],
+            support_int: [
+                { nome: 'Conjurer\'s Catalyst', desc: 'Passivo: Causar 100 dano magico faz inimigo explodir 40 dano para aliados em 300 de raio', img: 'conjurers_catalyst' },
+                { nome: "Idol of Scree'Auk", desc: 'Ativo: +50% slow res, phased, +25% evasion por 5s', img: 'idol_of_screeauk' }
+            ],
             tank: [
                 { nome: "Giant's Maul", desc: 'Passivo: Proximo ataque critico 140% + reduz MS/AS/cast speed do alvo por 3s', img: 'giant_maul' },
                 { nome: 'Rattlecage', desc: 'Passivo: Apos 180 dano, dispara em 2 inimigos: 110 dano + slow', img: 'rattlecage' }
@@ -798,7 +814,7 @@ const NEUTROS_POR_TIER = {
     5: {
         tier: 5,
         timing: '60 min',
-        turboTiming: '~40 min',
+        turboTiming: '~30 min',
         fase: 'late',
         itens: {
             core_melee: [
@@ -813,6 +829,10 @@ const NEUTROS_POR_TIER = {
                 { nome: 'Divine Regalia', desc: 'Passivo: +20% outgoing damage. Morrer desativa o item permanentemente', img: 'divine_regalia' },
                 { nome: 'Spider Legs', desc: 'Ativo: +20% MS, +50% turn rate, free pathing por 10s', img: 'spider_legs' }
             ],
+            support_int: [
+                { nome: 'Divine Regalia', desc: 'Passivo: +20% outgoing damage. Morrer desativa o item permanentemente', img: 'divine_regalia' },
+                { nome: 'Book of the Dead', desc: 'Ativo: Invoca 2 warriors + 2 archers por 65s — suporte pode usar offensivamente', img: 'demonicon' }
+            ],
             tank: [
                 { nome: 'Minotaur Horn', desc: 'Ativo: Dispel + 50% magic resist + imunidade a dano puro por 2s', img: 'minotaur_horn' },
                 { nome: 'Fallen Sky', desc: 'Ativo: Vira meteoro, stun 1.6s + 150 dano impacto + 60 DPS por 6s', img: 'fallen_sky' }
@@ -823,7 +843,8 @@ const NEUTROS_POR_TIER = {
 
 /**
  * Determina qual categoria de neutro usar baseado no heroi.
- * Retorna: 'core_melee', 'core_ranged', 'support', ou 'tank'
+ * Retorna: 'core_melee', 'core_ranged', 'support', 'support_int', ou 'tank'
+ * support_int: supports de inteligencia (priorizados Spellslinger, Partisan's Brand e Conjurer's Catalyst)
  */
 function categoriaNeutroHeroi(heroId) {
     const hero = simHeroConstants[heroId];
@@ -832,7 +853,11 @@ function categoriaNeutroHeroi(heroId) {
     const roles = hero.roles || [];
     const heroInfo = determinarPapelHeroi(heroId);
 
-    if (heroInfo.papeis.includes('support')) return 'support';
+    if (heroInfo.papeis.includes('support')) {
+        // INT e Universal supports recebem sugestoes focadas em dano magico e mana
+        const attrInt = hero.primary_attr === 'int' || hero.primary_attr === 'all';
+        return attrInt ? 'support_int' : 'support';
+    }
     if (heroInfo.papeis.includes('tank') || heroInfo.papeis.includes('offlaner')) {
         if (roles.includes('Carry')) return 'core_melee'; // carry tanque (Spectre, WK)
         return 'tank';
