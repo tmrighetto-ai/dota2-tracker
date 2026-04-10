@@ -23,6 +23,11 @@ let simEnemyPositions = [null, null, null, null, null];
 let simVisualizandoIndex = 0;        // index no array (0-4)
 let simVisualizandoTeam = 'ally';    // 'ally' ou 'enemy'
 
+// Token de geracao: evita que cliques rapidos causem race condition.
+// Cada chamada a gerarRecomendacaoSimulador incrementa este contador.
+// Se ao terminar as chamadas API o token mudou, a resposta e descartada.
+let simGeracaoAtual = 0;
+
 /**
  * Dados de prioridade de farm por posição.
  * Pos 1 = maior farm, Pos 5 = menor farm.
@@ -419,7 +424,13 @@ function trocarVisualizacao(team, index) {
  * Gera a recomendação inteligente de itens baseada nos heróis selecionados.
  * Este é o MOTOR PRINCIPAL do simulador.
  */
+// Cache de matchups em memoria (mesmo heroi nao busca duas vezes na sessao)
+const _heroMatchupsCache = {};
+
 async function gerarRecomendacaoSimulador() {
+    // Incrementa o token: qualquer resposta de geracao anterior sera ignorada
+    const minhaGeracao = ++simGeracaoAtual;
+
     const resultEl = document.getElementById('sim-result');
     const btn = document.getElementById('sim-generate-btn');
     if (!resultEl) return;
@@ -449,10 +460,13 @@ async function gerarRecomendacaoSimulador() {
         // Aliados = todos do mesmo time menos o heroi visualizado
         const allyIds = simSelectedHeroes[teamDoHeroi].filter((id, i) => id !== null && i !== viewIndex);
 
-        // 1. Buscar itens populares do heroi visualizado + de TODOS os aliados dele (em paralelo)
+        // 1. Buscar itens populares (usa cache — herois ja buscados nao chamam a API de novo)
         const allAllyIds = [meuHeroId, ...allyIds];
         const allItemPopPromises = allAllyIds.map(id => fetchHeroItemPopularity(id));
         const allItemPopResults = await Promise.all(allItemPopPromises);
+
+        // Se o usuario clicou em outro heroi enquanto aguardava, descarta esta resposta
+        if (minhaGeracao !== simGeracaoAtual) return;
 
         // Monta mapa: heroId → itemPopularity
         const itemPopMap = {};
@@ -461,19 +475,27 @@ async function gerarRecomendacaoSimulador() {
         });
         const itemPop = itemPopMap[meuHeroId];
 
-        // 2. Matchups do heroi contra cada inimigo
+        // 2. Matchups do heroi (usa cache)
         let matchups = null;
         try {
-            const matchupData = await apiFetch(
-                `https://api.opendota.com/api/heroes/${meuHeroId}/matchups`
-            );
-            matchups = {};
-            if (matchupData) {
-                matchupData.forEach(m => { matchups[m.hero_id] = m; });
+            if (_heroMatchupsCache[meuHeroId]) {
+                matchups = _heroMatchupsCache[meuHeroId];
+            } else {
+                const matchupData = await apiFetch(
+                    `https://api.opendota.com/api/heroes/${meuHeroId}/matchups`
+                );
+                matchups = {};
+                if (matchupData) {
+                    matchupData.forEach(m => { matchups[m.hero_id] = m; });
+                    _heroMatchupsCache[meuHeroId] = matchups;
+                }
             }
         } catch (e) {
             console.warn('Matchups não disponíveis:', e);
         }
+
+        // Verifica de novo apos o segundo await
+        if (minhaGeracao !== simGeracaoAtual) return;
 
         // 3. Analisar composição do time adversario
         const analiseInimiga = analisarComposicaoInimiga(enemyIds);
@@ -503,11 +525,15 @@ async function gerarRecomendacaoSimulador() {
         }, 100);
 
     } catch (e) {
+        if (minhaGeracao !== simGeracaoAtual) return; // erro de requisicao obsoleta, ignora
         console.error('Erro no simulador:', e);
         resultEl.innerHTML = '<p style="color:#ff4757;text-align:center;padding:20px">Erro ao gerar recomendação. Tente novamente.</p>';
     } finally {
-        btn.disabled = false;
-        btn.textContent = 'GERAR RECOMENDAÇÃO DE ITENS';
+        // So restaura o botao se esta ainda for a geracao atual
+        if (minhaGeracao === simGeracaoAtual) {
+            btn.disabled = false;
+            btn.textContent = 'GERAR RECOMENDAÇÃO DE ITENS';
+        }
     }
 }
 

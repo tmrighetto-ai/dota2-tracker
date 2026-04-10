@@ -260,14 +260,22 @@ async function requestMatchParse(matchId) {
     return null;
 }
 
+// Cache em memoria para popularidade de itens por heroi.
+// Persiste enquanto a aba estiver aberta — evita chamadas repetidas ao mudar de heroi no simulador.
+const _heroItemPopCache = {};
+
 /**
  * Busca os itens mais populares de um herói específico.
  * Retorna itens divididos por fase: start_game, early_game, mid_game, late_game.
  * Cada item tem um ID numérico e a contagem de vezes que foi comprado.
+ * Usa cache em memoria: o mesmo heroi nao faz duas chamadas na mesma sessao.
  */
 async function fetchHeroItemPopularity(heroId) {
+    if (_heroItemPopCache[heroId]) return _heroItemPopCache[heroId];
     try {
-        return await apiFetch(`${BASE_URL}/heroes/${heroId}/itemPopularity`);
+        const data = await apiFetch(`${BASE_URL}/heroes/${heroId}/itemPopularity`);
+        if (data) _heroItemPopCache[heroId] = data;
+        return data;
     } catch (error) {
         console.error('Erro em fetchHeroItemPopularity:', error);
         return null;
