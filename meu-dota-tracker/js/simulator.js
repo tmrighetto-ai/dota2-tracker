@@ -992,7 +992,7 @@ const ITENS_DECISAO_TIME = {
         nome: 'Radiance',
         fase: 'mid',
         motivo: 'Burn aura nao stacka — item caro, 1 por time no heroi que fica vivo nas lutas',
-        quemFazMelhor: ['core', 'offlaner'],
+        quemFazMelhor: ['core', 'offlaner', 'tank'],
         contraOQue: ['summons', 'heal'],
         impacto: 'alto'
     },
@@ -1536,6 +1536,35 @@ function montarRecomendacao(meuHero, itemPop, analiseInimiga, analiseAliada, mat
         });
     }
 
+    // 4. Para Pos 3 (offlaner/tank): garante que itens defensivos essenciais
+    //    apareçam na build mesmo se a API nao os listar no itemPopularity.
+    //    Pipe, Crimson Guard e Lotus Orb sao core em qualquer offlaner.
+    const heroInfo = determinarPapelHeroi(meuHero.id);
+    if (heroInfo.posicao === 3) {
+        const itensDefensivosPos3 = [
+            { name: 'pipe', fase: 'mid', motivo: 'Barreira magica para o time — essencial no offlaner' },
+            { name: 'crimson_guard', fase: 'mid', motivo: 'Barreira física para o time — essencial no offlaner' },
+            { name: 'lotus_orb', fase: 'mid', motivo: 'Dispel + reflect — protege aliados e a si mesmo' }
+        ];
+        itensDefensivosPos3.forEach(def => {
+            if (itensJaAdicionados.has(def.name)) return;
+            const itemInfo = simItemConstants[def.name];
+            if (!itemInfo) return;
+            itensJaAdicionados.add(def.name);
+            resultado.fases[def.fase].push({
+                name: def.name,
+                displayName: def.name.replace(/_/g, ' '),
+                img: `https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/items/${def.name}.png`,
+                porcentagem: 'ESSENCIAL',
+                pct: 0,
+                count: 0,
+                fase: def.fase,
+                isEssencial: true,
+                reason: def.motivo
+            });
+        });
+    }
+
     return resultado;
 }
 
@@ -1885,7 +1914,7 @@ function renderizarResultadoSimulador(container, meuHero, rec, analise, matchups
                         <div class="sim-phase-item-info">
                             <span class="sim-phase-item-name">${item.displayName}</span>
                             <div class="sim-phase-item-meta">
-                                <small class="sim-phase-item-pct" style="color:${corFase}">${item.porcentagem}% uso</small>
+                                <small class="sim-phase-item-pct" style="color:${item.isEssencial ? '#f5a623' : corFase}">${item.isEssencial ? item.porcentagem : item.porcentagem + '% uso'}</small>
                                 ${custoHtml}
                                 ${timingHtml}
                             </div>
@@ -1964,8 +1993,8 @@ function renderizarResultadoSimulador(container, meuHero, rec, analise, matchups
 
     // FILTRA itens de time:
     // 1. Candidatos com dados reais da API (pct > 0)
-    // 2. Mais candidatos com posição atribuída cuja role bate com o item
-    //    (ex: Pos 3 / offlaner/tank para Lotus Orb, Pipe, Crimson Guard)
+    // 2. Para itens com 'tank' no quemFazMelhor, garante que o Pos 3 apareca
+    //    mesmo sem dados da API (ex: Primal Beast para Pipe, Crimson, Lotus)
     // 3. So mostra se 2+ candidatos ao todo
     // 4. O heroi visualizado precisa estar entre eles
     const decisoes = todasDecisoes.map(d => {
@@ -1974,21 +2003,19 @@ function renderizarResultadoSimulador(container, meuHero, rec, analise, matchups
         // Candidatos com uso real na API
         const candidatosReais = d.candidatos.filter(c => c.pct > 0);
 
-        // Candidatos sem dados da API mas com posição explícita que bate com o item
-        // (role-based fallback — ex: Primal Beast Pos 3 para itens de tank)
-        const candidatosPorRole = d.candidatos.filter(c =>
-            c.pct === 0 &&
-            c.posicao &&
-            regra &&
-            regra.quemFazMelhor.some(papel => c.papeis.includes(papel))
-        );
+        // Para itens de tank: inclui o heroi Pos 3 mesmo sem dados da API
+        // So o Pos 3, nao todos os roles — evita poluir com herois 0%
+        const eTankItem = regra && regra.quemFazMelhor && regra.quemFazMelhor.includes('tank');
+        const pos3SemApi = eTankItem
+            ? d.candidatos.filter(c => c.pct === 0 && c.posicao === 3)
+            : [];
 
-        const candidatosExibidos = [...candidatosReais, ...candidatosPorRole];
+        const candidatosExibidos = [...candidatosReais, ...pos3SemApi];
 
         // Precisa de 2+ para ter conflito
         if (candidatosExibidos.length < 2) return null;
 
-        // O heroi visualizado precisa estar entre eles (por API ou por role)
+        // O heroi visualizado precisa estar entre eles
         const euEstou = candidatosExibidos.some(c => c.heroId === viewHeroId);
         if (!euEstou) return null;
 
