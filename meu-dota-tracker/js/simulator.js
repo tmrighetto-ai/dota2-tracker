@@ -1366,12 +1366,17 @@ function detectarItensCompartilhados(meuHeroId, allyIds, itemPopMap, enemyIds) {
         if (candidatos.length >= 2) {
             // Ordena por pontuação para exibição nas barras
             candidatos.sort((a, b) => b.pontuacao - a.pontuacao);
-            // melhorCandidato: quem tem maior % de uso real na API (mais confiavel)
+            // melhorCandidato: para itens de tank/offlaner, Pos 3 tem prioridade máxima
+            // Para demais itens, usa maior % de uso real na API (mais confiavel)
             // Se ninguem tem dados da API (pct=0), usa pontuação como fallback
             const candidatosComPct = candidatos.filter(c => c.pct > 0);
-            const melhorCandidato = candidatosComPct.length > 0
-                ? candidatosComPct.reduce((best, c) => c.pct > best.pct ? c : best)
-                : candidatos[0];
+            const eTankItem = regra.quemFazMelhor && regra.quemFazMelhor.includes('tank');
+            const candidatoPos3 = eTankItem ? candidatos.find(c => c.posicao === 3) : null;
+            const melhorCandidato = candidatoPos3
+                ? candidatoPos3
+                : candidatosComPct.length > 0
+                    ? candidatosComPct.reduce((best, c) => c.pct > best.pct ? c : best)
+                    : candidatos[0];
             const euDevoFazer = melhorCandidato.heroId === meuHeroId;
 
             // Verifica se este item é ESPECIALMENTE necessário nesta partida
@@ -1957,22 +1962,37 @@ function renderizarResultadoSimulador(container, meuHero, rec, analise, matchups
     const todasDecisoes = rec.itensCompartilhados ? rec.itensCompartilhados.decisoes : [];
     const viewHeroId = simSelectedHeroes[simVisualizandoTeam || 'ally'][simVisualizandoIndex || 0];
 
-    // FILTRA itens de time — logica simples e direta:
-    // 1. Remove TODOS os candidatos com 0% (sem dados reais = nao faz o item)
-    // 2. So mostra se 2+ herois tem dados reais (conflito real)
-    // 3. O heroi visualizado precisa estar entre eles
+    // FILTRA itens de time:
+    // 1. Candidatos com dados reais da API (pct > 0)
+    // 2. Mais candidatos com posição atribuída cuja role bate com o item
+    //    (ex: Pos 3 / offlaner/tank para Lotus Orb, Pipe, Crimson Guard)
+    // 3. So mostra se 2+ candidatos ao todo
+    // 4. O heroi visualizado precisa estar entre eles
     const decisoes = todasDecisoes.map(d => {
-        // Apenas candidatos com uso real na API
+        const regra = ITENS_DECISAO_TIME[d.itemName];
+
+        // Candidatos com uso real na API
         const candidatosReais = d.candidatos.filter(c => c.pct > 0);
 
-        // Precisa de 2+ herois com dados reais para ter conflito
-        if (candidatosReais.length < 2) return null;
+        // Candidatos sem dados da API mas com posição explícita que bate com o item
+        // (role-based fallback — ex: Primal Beast Pos 3 para itens de tank)
+        const candidatosPorRole = d.candidatos.filter(c =>
+            c.pct === 0 &&
+            c.posicao &&
+            regra &&
+            regra.quemFazMelhor.some(papel => c.papeis.includes(papel))
+        );
 
-        // O heroi visualizado precisa ter dados reais para este item
-        const euEstou = candidatosReais.some(c => c.heroId === viewHeroId);
+        const candidatosExibidos = [...candidatosReais, ...candidatosPorRole];
+
+        // Precisa de 2+ para ter conflito
+        if (candidatosExibidos.length < 2) return null;
+
+        // O heroi visualizado precisa estar entre eles (por API ou por role)
+        const euEstou = candidatosExibidos.some(c => c.heroId === viewHeroId);
         if (!euEstou) return null;
 
-        return { ...d, candidatos: candidatosReais };
+        return { ...d, candidatos: candidatosExibidos };
     }).filter(Boolean);
     if (decisoes.length > 0) {
         // Secao unificada: itens que precisam de coordenacao no time
